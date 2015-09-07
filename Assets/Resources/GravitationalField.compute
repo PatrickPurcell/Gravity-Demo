@@ -1,0 +1,81 @@
+﻿
+struct FieldPoint
+{
+    float3 position;
+    float3 displaced;
+};
+
+struct BodyData
+{
+    float  mass;
+    float3 position;
+};
+
+int    width;
+int    height;
+int    depth;
+int    body_count;
+float3 offset;
+
+RWStructuredBuffer<FieldPoint> point_buffer;
+RWStructuredBuffer<uint3>      grid_buffer;
+RWStructuredBuffer<float4>     body_buffer;
+
+int Index(int x, int y, int z)
+{
+    return x + y * width + z * width * height;
+}
+
+int Index(uint3 id)
+{
+    return Index(id.x, id.y, id.z);
+}
+
+#pragma kernel ComputePointPositions
+
+[numthreads(1, 1, 1)]
+void ComputePointPositions(uint3 id : SV_DispatchThreadID)
+{
+    point_buffer[Index(id)].position = float3(id.x, id.y, id.z) - offset;
+}
+
+#pragma kernel ComputeDisplacement
+
+[numthreads(1, 1, 1)]
+void ComputeDisplacement(uint3 id : SV_DispatchThreadID)
+{
+    int    index        = Index(id);
+    float3 displacement = (float3)0;
+    float3 position     = point_buffer[index].position;
+
+    for (int i = 0; i < body_count; ++i)
+    {
+        float G = 0.6674f; // TODO : Normalize units
+        float3 v = body_buffer[i].xyz - position;
+        float  r = length(v);
+        float  f = G * (body_buffer[i].w / (r * r));
+        displacement += v / r * min(f, r);
+
+        // space-time curvature = the Ricci tensor -
+        //                        half the metric tensor *
+        //                        scalar curvature
+    }
+
+    point_buffer[index].displaced = position + displacement;
+}
+
+#pragma kernel CreateGrid
+
+[numthreads(1, 1, 1)]
+void CreateGrid(uint3 id : SV_DispatchThreadID)
+{
+    int index = Index(id);
+
+    grid_buffer[index].x = index;
+    grid_buffer[index].y = index;
+    grid_buffer[index].z = index;
+
+    if (id.x < width  - 1) grid_buffer[index].x = Index(id.x + 1, id.y,     id.z    );
+    if (id.y < height - 1) grid_buffer[index].y = Index(id.x,     id.y + 1, id.z    );
+    if (id.z < depth  - 1) grid_buffer[index].z = Index(id.x,     id.y,     id.z + 1);
+}

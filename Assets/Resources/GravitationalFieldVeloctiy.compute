@@ -1,0 +1,45 @@
+﻿
+struct FieldPoint
+{
+    float3 position;
+    float3 displaced;
+};
+
+struct BeamData
+{
+    float4 position;
+    float3 velocity;
+    float  mass;
+};
+
+int   w;
+int   h;
+int   d;
+float delta_time;
+
+RWStructuredBuffer<FieldPoint> point_buffer;
+RWStructuredBuffer<BeamData>   beam_buffer;
+
+int Index(int x, int y, int z)
+{
+    return x + y * w + z * w * h;
+}
+
+int Index(uint3 id)
+{
+    return Index(id.x, id.y, id.z);
+}
+
+#pragma kernel ComputeVelocity
+
+[numthreads(1, 1, 1)]
+void ComputeVelocity(uint3 id : SV_DispatchThreadID)
+{
+    int index = Index(id);
+    float4 position = beam_buffer[index].position;
+    float3 velocity = beam_buffer[index].velocity;
+    float  mass     = beam_buffer[index].mass;
+
+    int field_i = Index(position.x, position.y, position.z);
+
+}
