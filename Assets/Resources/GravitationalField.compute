@@ -3,7 +3,7 @@
 
 RWStructuredBuffer<FieldPoint> point_buffer;
 RWStructuredBuffer<uint3>      grid_buffer;
-RWStructuredBuffer<float4>     body_buffer;
+RWStructuredBuffer<BodyData>   body_buffer;
 
 #pragma kernel ComputePointPositions
 
@@ -25,20 +25,20 @@ void ComputeDisplacement(uint3 id : SV_DispatchThreadID)
     uint   index        = Index(id);
     float3 position     = point_buffer[index].position;
     float3 displacement = (float3)0;
-
+    
     for (uint i = 0; i < body_count; ++i)
     {
         float  G = 0.6674f; // TODO : Normalize units
-        float3 v = body_buffer[i].xyz - position;
+        float3 v = body_buffer[i].position.xyz - position;
         float  r = length(v);
-        float  f = G * (body_buffer[i].w / (r * r));
+        float  f = G * (body_buffer[i].mass / (r * r));
         displacement += v / r * min(f, r);
-
+    
         // space-time curvature = the Ricci tensor -
         //                        half the metric tensor *
         //                        scalar curvature
     }
-
+    
     point_buffer[index].displaced_position = position + displacement;
 }
 

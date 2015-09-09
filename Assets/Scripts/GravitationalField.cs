@@ -23,8 +23,7 @@ namespace GravityDemo
         [SerializeField] private bool drawPoints = true;
         [SerializeField] private bool drawGrid   = true;
 
-        //private GravitationalBody.Data[] bodyData;
-        private Vector4[] bodyData;
+        private GravitationalBody.Data[] bodyDataEx;
 
         private ComputeBuffer pointBuffer;
         private ComputeBuffer gridBuffer;
@@ -124,14 +123,12 @@ namespace GravityDemo
             {
                 for (int i = 0; i < bodies.Count; ++i)
                 {
-                    //bodyData[i].mass     = 1;
-                    //bodyData[i].position = bodies[i].transform.position;
-                    bodyData[i]   = bodies[i].transform.position;
-                    bodyData[i].w = bodies[i].Mass;
+                    bodyDataEx[i].position   = bodies[i].transform.position;
+                    bodyDataEx[i].position.w = 1;
+                    bodyDataEx[i].mass       = bodies[i].Mass;
                 }
 
-                bodyBuffer.SetData(bodyData);
-                //computeShader.Dispatch(computeDisplacementKernel, ThreadsX, ThreadsY, ThreadsZ);
+                bodyBuffer.SetData(bodyDataEx);
             }
 
             gravitationalField.SetInt("body_count", bodies.Count);
@@ -191,8 +188,9 @@ namespace GravityDemo
             {
                 gravitationalField.SetBuffer(computeGridKernel, "point_buffer", pointBuffer);
                 gravitationalField.SetBuffer(computeGridKernel, "grid_buffer",  gridBuffer);
-                gridMaterial      .SetBuffer(                   "point_buffer", pointBuffer);
-                gridMaterial      .SetBuffer(                   "grid_buffer",  gridBuffer);
+
+                gridMaterial.SetBuffer("point_buffer", pointBuffer);
+                gridMaterial.SetBuffer("grid_buffer",  gridBuffer);
             }
         }
 
@@ -200,17 +198,16 @@ namespace GravityDemo
         {
             if (bodies.Count > 0)
             {
-                if (ValidateComputeBuffer(bodies.Count, sizeof(float) * 4, ref bodyBuffer))
+                if (ValidateComputeBuffer(bodies.Count, GravitationalBody.Data.Size, ref bodyBuffer))
                 {
                     gravitationalField.SetInt("body_count", bodies.Count);
                     gravitationalField.SetBuffer(computeDisplacementKernel, "point_buffer", pointBuffer);
                     gravitationalField.SetBuffer(computeDisplacementKernel, "body_buffer",  bodyBuffer);
                 }
 
-                if (bodyData == null || bodyData.Length != bodies.Count)
+                if (bodyDataEx == null || bodyDataEx.Length != bodies.Count)
                 {
-                    //bodyData = new GravitationalBody.Data[bodies.Count];
-                    bodyData = new Vector4[bodies.Count];
+                    bodyDataEx = new GravitationalBody.Data[bodies.Count];
                 }
             }
         }
@@ -224,6 +221,7 @@ namespace GravityDemo
         private bool ValidateComputeBuffer(int count, int stride, ref ComputeBuffer computeBuffer)
         {
             bool computeBufferAllocated = false;
+
             if (computeBuffer == null || computeBuffer.count != count || computeBuffer.stride != stride)
             {
                 ReleaseComputeBuffer(ref computeBuffer);
@@ -248,16 +246,9 @@ namespace GravityDemo
         #region ON DRAW GIZMOS
         private void OnDrawGizmos()
         {
-            Color     gizmosColor  = Gizmos.color;
-            Matrix4x4 gizmosMatrix = Gizmos.matrix;
-
             Gizmos.color  = new Color(1, 1, 1, 0.25f);
             Gizmos.matrix = transform.localToWorldMatrix;
-
             Gizmos.DrawWireCube(Vector3.zero, new Vector3(width, height, depth));
-
-            Gizmos.matrix = gizmosMatrix;
-            Gizmos.color  = gizmosColor;
         }
         #endregion
     }
