@@ -1,34 +1,10 @@
 ﻿
-struct FieldPoint
-{
-    float3 position;
-    float3 displaced;
-};
+#include "GravitationalField.cginc"
 
-struct BeamData
-{
-    float4 position;
-    float3 velocity;
-    float  mass;
-};
-
-int   w;
-int   h;
-int   d;
 float delta_time;
 
 RWStructuredBuffer<FieldPoint> point_buffer;
-RWStructuredBuffer<BeamData>   beam_buffer;
-
-int Index(int x, int y, int z)
-{
-    return x + y * w + z * w * h;
-}
-
-int Index(uint3 id)
-{
-    return Index(id.x, id.y, id.z);
-}
+RWStructuredBuffer<BodyData>   body_buffer;
 
 #pragma kernel ComputeVelocity
 
@@ -36,20 +12,20 @@ int Index(uint3 id)
 void ComputeVelocity(uint3 id : SV_DispatchThreadID)
 {
     int index = Index(id);
-    float4 position = beam_buffer[index].position;
-    float3 velocity = beam_buffer[index].velocity;
-    float  mass     = beam_buffer[index].mass;
+    float4 position = body_buffer[index].position;
+    float3 velocity = body_buffer[index].velocity;
+    float  mass     = body_buffer[index].mass;
 
     int field_i = Index(round(position.x),
                         round(position.y),
                         round(position.z));
 
-    float3 gravity_vector = point_buffer[field_i].displaced -
+    float3 gravity_vector = point_buffer[field_i].displaced_position -
                             point_buffer[field_i].position;
 
     velocity += float4(gravity_vector, 1);
     position += float4(velocity * delta_time, 1);;
 
-    beam_buffer[index].position = position;
-    beam_buffer[index].velocity = velocity;
+    body_buffer[index].position = position;
+    body_buffer[index].velocity = velocity;
 }

@@ -25,6 +25,7 @@ Shader "Custom/GravitationalFieldGrid"
             CGPROGRAM
 
             #include "UnityCG.cginc"
+            #include "GravitationalField.cginc"
 
             #pragma target         5.0
             #pragma vertex         VS_Main
@@ -47,28 +48,22 @@ Shader "Custom/GravitationalFieldGrid"
                 float4 color    : COLOR;
             };
 
-            struct FieldPoint
-            {
-                float3 position;
-                float3 displaced;
-            };
-
             uniform StructuredBuffer<FieldPoint> point_buffer;
             uniform StructuredBuffer<uint3>      grid_buffer;
             uniform float4x4 object_to_world;
 
             GS_Input VS_Main(uint id : SV_VertexID)
             {
-                float  l     = saturate(length(point_buffer[id].position - point_buffer[id].displaced));
+                float  l     = saturate(length(point_buffer[id].position - point_buffer[id].displaced_position));
                 float4 color = lerp(float4(0, 0, 0, 0), float4(0, 0, 0, 0.1f), l);
 
                 uint3 index = grid_buffer[id];
                 GS_Input output =
                 {
-                    mul(object_to_world, float4(point_buffer[id     ].displaced, 1)),
-                    mul(object_to_world, float4(point_buffer[index.x].displaced, 1)),
-                    mul(object_to_world, float4(point_buffer[index.y].displaced, 1)),
-                    mul(object_to_world, float4(point_buffer[index.z].displaced, 1)),
+                    mul(object_to_world, float4(point_buffer[id     ].displaced_position, 1)),
+                    mul(object_to_world, float4(point_buffer[index.x].displaced_position, 1)),
+                    mul(object_to_world, float4(point_buffer[index.y].displaced_position, 1)),
+                    mul(object_to_world, float4(point_buffer[index.z].displaced_position, 1)),
                     color,
                 };
 

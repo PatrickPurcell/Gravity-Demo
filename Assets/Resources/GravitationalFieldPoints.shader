@@ -27,6 +27,7 @@ Shader "Custom/GravitationalFieldPoints"
             CGPROGRAM
 
             #include "UnityCG.cginc"
+            #include "GravitationalField.cginc"
 
             #pragma target         5.0
             #pragma vertex         VS_Main
@@ -49,12 +50,6 @@ Shader "Custom/GravitationalFieldPoints"
                 float4 color    : COLOR;
             };
 
-            struct FieldPoint
-            {
-                float3 position;
-                float3 displaced;
-            };
-
             uniform sampler2D _MainTex;
             uniform float     _Size;
 
@@ -64,10 +59,10 @@ Shader "Custom/GravitationalFieldPoints"
             GS_Input VS_Main(uint id : SV_VertexID)
             {
                 float4 position =
-                float4(point_buffer[id].displaced, 1);
+                float4(point_buffer[id].displaced_position, 1);
                 position = mul(object_to_world, position);
 
-                float  l     = saturate(length(point_buffer[id].position - point_buffer[id].displaced));
+                float  l     = saturate(length(point_buffer[id].position - point_buffer[id].displaced_position));
                 float4 color = lerp(float4(0, 0, 0, 0), float4(0, 0, 0.5f, 0.1f), l);
                 //color = float4(1, 1, 1, 1);
 

@@ -7,10 +7,6 @@ namespace GravityDemo
     [ExecuteInEditMode]
     public sealed partial class GravitationalField : MonoBehaviour
     {
-        #region CONSTANTS
-
-        #endregion
-
         #region FIELDS
         [SerializeField, HideInInspector]
         private List<GravitationalBody> bodies = new List<GravitationalBody>();
@@ -41,7 +37,7 @@ namespace GravityDemo
 
         private int computePointPositionsKernel;
         private int computeDisplacementKernel;
-        private int createGridKernel;
+        private int computeGridKernel;
         private int computeVelocityKernel;
         #endregion
 
@@ -64,9 +60,12 @@ namespace GravityDemo
             set { depth = Mathf.Max(1, value); }
         }
 
-        private int ThreadsX { get { return width  + 1; } }
-        private int ThreadsY { get { return height + 1; } }
-        private int ThreadsZ { get { return depth  + 1; } }
+        private int W        { get { return width  + 1; } }
+        private int H        { get { return height + 1; } }
+        private int D        { get { return depth  + 1; } }
+        private int ThreadsX { get { return W;          } }
+        private int ThreadsY { get { return H;          } }
+        private int ThreadsZ { get { return D;          } }
 
         private int PointCount
         {
@@ -105,7 +104,7 @@ namespace GravityDemo
 
             computePointPositionsKernel = gravitationalField.FindKernel("ComputePointPositions");
             computeDisplacementKernel   = gravitationalField.FindKernel("ComputeDisplacement");
-            createGridKernel            = gravitationalField.FindKernel("CreateGrid");
+            computeGridKernel           = gravitationalField.FindKernel("ComputeGrid");
 
             computeVelocityKernel = gravitationalFieldVelocity.FindKernel("ComputeVelocity");
         }
@@ -151,8 +150,6 @@ namespace GravityDemo
             gravitationalField.SetInt("body_count", bodies.Count);
             gravitationalField.Dispatch(computeDisplacementKernel, ThreadsX, ThreadsY, ThreadsZ);
 
-            gravitationalField.Dispatch(createGridKernel, ThreadsX, ThreadsY, ThreadsZ);
-
             if (drawPoints)
             {
                 pointsMaterial.SetPass(0);
@@ -162,23 +159,12 @@ namespace GravityDemo
 
             if (drawGrid)
             {
+                gravitationalField.Dispatch(computeGridKernel, ThreadsX, ThreadsY, ThreadsZ);
+
                 gridMaterial.SetPass(0);
                 gridMaterial.SetMatrix("object_to_world", transform.localToWorldMatrix);
                 Graphics.DrawProcedural(MeshTopology.Points, gridBuffer.count);
             }
-
-            //if (beamData == null)
-            //{
-            //    beamData = new GravitationalBeam.Data[beamBuffer.count];
-            //    for (int i = 0; i < beams.Count; ++i)
-            //    {
-            //        beamData[i].mass = beams[i].Mass;
-            //        beamData[i].position = beams[i].transform.position;
-            //        beamData[i].velocity = beams[i].Velocity;
-            //    }
-            //
-            //    beamBuffer.SetData(beamData);
-            //}
 
             gravitationalFieldVelocity.Dispatch(computeVelocityKernel, 1, 1, 1);
         }
@@ -197,18 +183,6 @@ namespace GravityDemo
             #endif
         }
 
-        public void AddBeam()
-        {
-            GravitationalBeam beam =
-            new GameObject().AddComponent<GravitationalBeam>();
-            beam.transform.parent = transform;
-            beams.Add(beam);
-
-            #if UNITY_EDITOR
-            UnityEditor.Selection.activeGameObject = beam.gameObject;
-            #endif
-        }
-
         private void ValidatePointBuffer()
         {
             if (pointBuffer == null || pointBuffer.count != PointCount)
@@ -216,9 +190,9 @@ namespace GravityDemo
                 ReleaseComputeBuffer(ref pointBuffer);
                 pointBuffer = new ComputeBuffer(PointCount, sizeof(float) * 3 * 2);
 
-                gravitationalField.SetInt   ("width",  width  + 1);
-                gravitationalField.SetInt   ("height", height + 1);
-                gravitationalField.SetInt   ("depth",  depth  + 1);
+                gravitationalField.SetInt   ("w",  width  + 1);
+                gravitationalField.SetInt   ("h", height + 1);
+                gravitationalField.SetInt   ("d",  depth  + 1);
                 gravitationalField.SetVector("offset", new Vector3(width, height, depth) * 0.5f);
                 gravitationalField.SetBuffer(computePointPositionsKernel, "point_buffer", pointBuffer);
                 gravitationalField.Dispatch(computePointPositionsKernel, ThreadsX, ThreadsY, ThreadsZ);
@@ -234,11 +208,11 @@ namespace GravityDemo
                 ReleaseComputeBuffer(ref gridBuffer);
                 gridBuffer = new ComputeBuffer(PointCount, sizeof(uint) * 3);
 
-                gravitationalField.SetInt   ("width",  width  + 1);
-                gravitationalField.SetInt   ("height", height + 1);
-                gravitationalField.SetInt   ("depth",  depth  + 1);
-                gravitationalField.SetBuffer(createGridKernel, "point_buffer", pointBuffer);
-                gravitationalField.SetBuffer(createGridKernel, "grid_buffer",  gridBuffer);
+                gravitationalField.SetInt   ("w",  width  + 1);
+                gravitationalField.SetInt   ("h", height + 1);
+                gravitationalField.SetInt   ("d",  depth  + 1);
+                gravitationalField.SetBuffer(computeGridKernel, "point_buffer", pointBuffer);
+                gravitationalField.SetBuffer(computeGridKernel, "grid_buffer",  gridBuffer);
 
                 gridMaterial.SetBuffer("point_buffer", pointBuffer);
                 gridMaterial.SetBuffer("grid_buffer",  gridBuffer);

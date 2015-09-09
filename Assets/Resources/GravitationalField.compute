@@ -1,37 +1,13 @@
 ﻿
-struct FieldPoint
-{
-    float3 position;
-    float3 displaced;
-};
-
-struct BodyData
-{
-    float  mass;
-    float3 position;
-};
-
-int    width;
-int    height;
-int    depth;
-int    body_count;
-float3 offset;
+#include "GravitationalField.cginc"
 
 RWStructuredBuffer<FieldPoint> point_buffer;
 RWStructuredBuffer<uint3>      grid_buffer;
 RWStructuredBuffer<float4>     body_buffer;
 
-int Index(int x, int y, int z)
-{
-    return x + y * width + z * width * height;
-}
-
-int Index(uint3 id)
-{
-    return Index(id.x, id.y, id.z);
-}
-
 #pragma kernel ComputePointPositions
+
+float3 offset;
 
 [numthreads(1, 1, 1)]
 void ComputePointPositions(uint3 id : SV_DispatchThreadID)
@@ -41,16 +17,18 @@ void ComputePointPositions(uint3 id : SV_DispatchThreadID)
 
 #pragma kernel ComputeDisplacement
 
+uint body_count;
+
 [numthreads(1, 1, 1)]
 void ComputeDisplacement(uint3 id : SV_DispatchThreadID)
 {
-    int    index        = Index(id);
-    float3 displacement = (float3)0;
+    uint   index        = Index(id);
     float3 position     = point_buffer[index].position;
+    float3 displacement = (float3)0;
 
-    for (int i = 0; i < body_count; ++i)
+    for (uint i = 0; i < body_count; ++i)
     {
-        float G = 0.6674f; // TODO : Normalize units
+        float  G = 0.6674f; // TODO : Normalize units
         float3 v = body_buffer[i].xyz - position;
         float  r = length(v);
         float  f = G * (body_buffer[i].w / (r * r));
@@ -61,13 +39,13 @@ void ComputeDisplacement(uint3 id : SV_DispatchThreadID)
         //                        scalar curvature
     }
 
-    point_buffer[index].displaced = position + displacement;
+    point_buffer[index].displaced_position = position + displacement;
 }
 
-#pragma kernel CreateGrid
+#pragma kernel ComputeGrid
 
 [numthreads(1, 1, 1)]
-void CreateGrid(uint3 id : SV_DispatchThreadID)
+void ComputeGrid(uint3 id : SV_DispatchThreadID)
 {
     int index = Index(id);
 
@@ -75,7 +53,7 @@ void CreateGrid(uint3 id : SV_DispatchThreadID)
     grid_buffer[index].y = index;
     grid_buffer[index].z = index;
 
-    if (id.x < width  - 1) grid_buffer[index].x = Index(id.x + 1, id.y,     id.z    );
-    if (id.y < height - 1) grid_buffer[index].y = Index(id.x,     id.y + 1, id.z    );
-    if (id.z < depth  - 1) grid_buffer[index].z = Index(id.x,     id.y,     id.z + 1);
+    if (id.x < w - 1) grid_buffer[index].x = Index(id.x + 1, id.y,     id.z    );
+    if (id.y < h - 1) grid_buffer[index].y = Index(id.x,     id.y + 1, id.z    );
+    if (id.z < d - 1) grid_buffer[index].z = Index(id.x,     id.y,     id.z + 1);
 }

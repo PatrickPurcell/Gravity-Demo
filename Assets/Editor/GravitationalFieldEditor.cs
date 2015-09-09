@@ -31,13 +31,6 @@ namespace GravityDemo
                 (target as GravitationalField).AddBody();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.Space();
-            if (GUILayout.Button("Add Beam"))
-                (target as GravitationalField).AddBeam();
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
         }
         #endregion
     }

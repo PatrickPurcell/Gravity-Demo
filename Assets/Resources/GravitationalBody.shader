@@ -21,6 +21,7 @@ Shader "Custom/GravitationalBody"
             CGPROGRAM
 
             #include "UnityCG.cginc"
+            #include "GravitationalField.cginc"
 
             #pragma target         5.0
             #pragma vertex         VS_Main
@@ -37,14 +38,7 @@ Shader "Custom/GravitationalBody"
                 float4 position : POSITION;
             };
 
-            struct BeamData
-            {
-                float4 position;
-                float3 velocity;
-                float  mass;
-            };
-
-            RWStructuredBuffer<BeamData> beam_buffer;
+            RWStructuredBuffer<BodyData> body_data;
             uniform float4x4 object_to_world;
 
             FS_Input VS_Main(VS_Input input)
