@@ -77,5 +77,16 @@ namespace GravityDemo
             transform.position += velocity * Time.deltaTime;
         }
         #endregion
+
+        #region ON DRAW GIZMOS
+        #if UNITY_EDITOR
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = Color.white;
+            Gizmos.DrawSphere(transform.localPosition, transform.localScale.y * 0.45f);
+            UnityEditor.Handles.ArrowCap(0, transform.position, transform.rotation, initialForce);
+        }
+        #endif
+        #endregion
     }
 }

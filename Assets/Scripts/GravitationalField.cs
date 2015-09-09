@@ -23,8 +23,6 @@ namespace GravityDemo
         [SerializeField] private bool drawPoints = true;
         [SerializeField] private bool drawGrid   = true;
 
-        private GravitationalBody.Data[] bodyDataEx;
-
         private ComputeBuffer pointBuffer;
         private ComputeBuffer gridBuffer;
         private ComputeBuffer bodyBuffer;
@@ -33,43 +31,22 @@ namespace GravityDemo
         private int computeDisplacementKernel;
         private int computeGridKernel;
         private int computeVelocityKernel;
+
+        private GravitationalBody.Data[] bodyDataEx;
         #endregion
 
         #region PROPERTIES
-        public int Width
-        {
-            get { return width; }
-            set { width = Mathf.Max(1, value); }
-        }
+        public int Width  { get { return width;  } set { width  = Mathf.Max(1, value); } }
+        public int Height { get { return height; } set { height = Mathf.Max(1, value); } }
+        public int Depth  { get { return depth;  } set { depth  = Mathf.Max(1, value); } }
 
-        public int Height
-        {
-            get { return height; }
-            set { height = Mathf.Max(1, value); }
-        }
-
-        public int Depth
-        {
-            get { return depth; }
-            set { depth = Mathf.Max(1, value); }
-        }
-
-        private int W        { get { return width  + 1; } }
-        private int H        { get { return height + 1; } }
-        private int D        { get { return depth  + 1; } }
-        private int ThreadsX { get { return W;          } }
-        private int ThreadsY { get { return H;          } }
-        private int ThreadsZ { get { return D;          } }
-
-        private int PointCount
-        {
-            get
-            {
-                return (width  + 1) *
-                       (height + 1) *
-                       (depth  + 1);
-            }
-        }
+        private int W          { get { return width  + 1; } }
+        private int H          { get { return height + 1; } }
+        private int D          { get { return depth  + 1; } }
+        private int ThreadsX   { get { return W;          } }
+        private int ThreadsY   { get { return H;          } }
+        private int ThreadsZ   { get { return D;          } }
+        private int PointCount { get { return W * H * D;  } }
         #endregion
 
         #region AWAKE
