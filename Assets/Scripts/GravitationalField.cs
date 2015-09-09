@@ -11,9 +11,6 @@ namespace GravityDemo
         [SerializeField, HideInInspector]
         private List<GravitationalBody> bodies = new List<GravitationalBody>();
 
-        [SerializeField, HideInInspector]
-        private List<GravitationalBeam> beams = new List<GravitationalBeam>();
-
         [SerializeField, HideInInspector] private int width  = 8;
         [SerializeField, HideInInspector] private int height = 8;
         [SerializeField, HideInInspector] private int depth  = 8;
@@ -28,7 +25,6 @@ namespace GravityDemo
 
         //private GravitationalBody.Data[] bodyData;
         private Vector4[] bodyData;
-        private GravitationalBeam.Data[] beamData;
 
         private ComputeBuffer pointBuffer;
         private ComputeBuffer gridBuffer;
@@ -131,7 +127,6 @@ namespace GravityDemo
             ValidatePointBuffer();
             ValidateGridBuffer();
             ValidateBodyBuffer();
-            ValidateBeamBuffer();
 
             if (bodies.Count > 0)
             {
@@ -236,19 +231,6 @@ namespace GravityDemo
                 {
                     //bodyData = new GravitationalBody.Data[bodies.Count];
                     bodyData = new Vector4[bodies.Count];
-                }
-            }
-        }
-
-        private void ValidateBeamBuffer()
-        {
-            if (beams.Count > 0)
-            {
-                if (beamBuffer == null || beamBuffer.count != beams.Count)
-                {
-                    ReleaseComputeBuffer(ref beamBuffer);
-                    beamBuffer = new ComputeBuffer(beams.Count, GravitationalBeam.Data.Size);
-
                 }
             }
         }
