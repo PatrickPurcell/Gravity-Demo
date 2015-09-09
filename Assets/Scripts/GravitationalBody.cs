@@ -10,15 +10,20 @@ namespace GravityDemo
         public struct Data
         {
             #region FIELDS
+            public Vector4 position;
+            public Vector3 velocity;
             public float   mass;
-            public Vector3 position;
             #endregion
 
             #region PROPERTIES
             public static int Size
             {
-                get { return sizeof(float) +
-                             sizeof(float) * 3; }
+                get
+                {
+                    return sizeof(float) * 4 +
+                           sizeof(float) * 3 +
+                           sizeof(float);
+                }
             }
             #endregion
         }

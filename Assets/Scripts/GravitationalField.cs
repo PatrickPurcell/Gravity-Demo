@@ -29,7 +29,6 @@ namespace GravityDemo
         private ComputeBuffer pointBuffer;
         private ComputeBuffer gridBuffer;
         private ComputeBuffer bodyBuffer;
-        private ComputeBuffer beamBuffer;
 
         private int computePointPositionsKernel;
         private int computeDisplacementKernel;
@@ -86,17 +85,10 @@ namespace GravityDemo
         #region ON ENABLE / DISABLE
         private void OnEnable()
         {
-            if (gravitationalField == null)
-                gravitationalField = Resources.Load<ComputeShader>("GravitationalField");
-
-            if (gravitationalFieldVelocity == null)
-                gravitationalFieldVelocity = Resources.Load<ComputeShader>("GravitationalFieldVeloctiy");
-
-            if (pointsMaterial == null)
-                pointsMaterial = Resources.Load<Material>("GravitationalFieldPoints");
-
-            if (gridMaterial == null)
-                gridMaterial = Resources.Load<Material>("GravitationalFieldGrid");
+            LoadResource("GravitationalField",         ref gravitationalField);
+            LoadResource("GravitationalFieldVeloctiy", ref gravitationalFieldVelocity);
+            LoadResource("GravitationalFieldPoints",   ref pointsMaterial);
+            LoadResource("GravitationalFieldGrid",     ref gridMaterial);
 
             computePointPositionsKernel = gravitationalField.FindKernel("ComputePointPositions");
             computeDisplacementKernel   = gravitationalField.FindKernel("ComputeDisplacement");
@@ -146,19 +138,12 @@ namespace GravityDemo
             gravitationalField.Dispatch(computeDisplacementKernel, ThreadsX, ThreadsY, ThreadsZ);
 
             if (drawPoints)
-            {
-                pointsMaterial.SetPass(0);
-                pointsMaterial.SetMatrix("object_to_world", transform.localToWorldMatrix);
-                Graphics.DrawProcedural(MeshTopology.Points, pointBuffer.count);
-            }
+                DrawField(pointsMaterial);
 
             if (drawGrid)
             {
                 gravitationalField.Dispatch(computeGridKernel, ThreadsX, ThreadsY, ThreadsZ);
-
-                gridMaterial.SetPass(0);
-                gridMaterial.SetMatrix("object_to_world", transform.localToWorldMatrix);
-                Graphics.DrawProcedural(MeshTopology.Points, gridBuffer.count);
+                DrawField(gridMaterial);
             }
 
             gravitationalFieldVelocity.Dispatch(computeVelocityKernel, 1, 1, 1);
@@ -178,16 +163,20 @@ namespace GravityDemo
             #endif
         }
 
+        private void DrawField(Material material)
+        {
+            material.SetPass(0);
+            material.SetMatrix("object_to_world", transform.localToWorldMatrix);
+            Graphics.DrawProcedural(MeshTopology.Points, PointCount);
+        }
+
         private void ValidatePointBuffer()
         {
-            if (pointBuffer == null || pointBuffer.count != PointCount)
+            if (ValidateComputeBuffer(PointCount, sizeof(float) * 3 * 2, ref pointBuffer))
             {
-                ReleaseComputeBuffer(ref pointBuffer);
-                pointBuffer = new ComputeBuffer(PointCount, sizeof(float) * 3 * 2);
-
-                gravitationalField.SetInt   ("w",  width  + 1);
-                gravitationalField.SetInt   ("h", height + 1);
-                gravitationalField.SetInt   ("d",  depth  + 1);
+                gravitationalField.SetInt   ("w", W);
+                gravitationalField.SetInt   ("h", H);
+                gravitationalField.SetInt   ("d", D);
                 gravitationalField.SetVector("offset", new Vector3(width, height, depth) * 0.5f);
                 gravitationalField.SetBuffer(computePointPositionsKernel, "point_buffer", pointBuffer);
                 gravitationalField.Dispatch(computePointPositionsKernel, ThreadsX, ThreadsY, ThreadsZ);
@@ -198,19 +187,12 @@ namespace GravityDemo
 
         private void ValidateGridBuffer()
         {
-            if (gridBuffer == null || gridBuffer.count != PointCount)
+            if (ValidateComputeBuffer(PointCount, sizeof(uint) * 3, ref gridBuffer))
             {
-                ReleaseComputeBuffer(ref gridBuffer);
-                gridBuffer = new ComputeBuffer(PointCount, sizeof(uint) * 3);
-
-                gravitationalField.SetInt   ("w",  width  + 1);
-                gravitationalField.SetInt   ("h", height + 1);
-                gravitationalField.SetInt   ("d",  depth  + 1);
                 gravitationalField.SetBuffer(computeGridKernel, "point_buffer", pointBuffer);
                 gravitationalField.SetBuffer(computeGridKernel, "grid_buffer",  gridBuffer);
-
-                gridMaterial.SetBuffer("point_buffer", pointBuffer);
-                gridMaterial.SetBuffer("grid_buffer",  gridBuffer);
+                gridMaterial      .SetBuffer(                   "point_buffer", pointBuffer);
+                gridMaterial      .SetBuffer(                   "grid_buffer",  gridBuffer);
             }
         }
 
@@ -218,10 +200,8 @@ namespace GravityDemo
         {
             if (bodies.Count > 0)
             {
-                if (bodyBuffer == null || bodyBuffer.count != bodies.Count)
+                if (ValidateComputeBuffer(bodies.Count, sizeof(float) * 4, ref bodyBuffer))
                 {
-                    ReleaseComputeBuffer(ref bodyBuffer);
-                    bodyBuffer = new ComputeBuffer(bodies.Count, sizeof(float) * 4);// GravitationalBody.Data.Size);
                     gravitationalField.SetInt("body_count", bodies.Count);
                     gravitationalField.SetBuffer(computeDisplacementKernel, "point_buffer", pointBuffer);
                     gravitationalField.SetBuffer(computeDisplacementKernel, "body_buffer",  bodyBuffer);
@@ -233,6 +213,25 @@ namespace GravityDemo
                     bodyData = new Vector4[bodies.Count];
                 }
             }
+        }
+
+        private void LoadResource<T>(string resourcePath, ref T resource) where T : UnityEngine.Object
+        {
+            if (resource == null)
+                resource = Resources.Load<T>(resourcePath);
+        }
+
+        private bool ValidateComputeBuffer(int count, int stride, ref ComputeBuffer computeBuffer)
+        {
+            bool computeBufferAllocated = false;
+            if (computeBuffer == null || computeBuffer.count != count || computeBuffer.stride != stride)
+            {
+                ReleaseComputeBuffer(ref computeBuffer);
+                computeBuffer = new ComputeBuffer(count, stride);
+                computeBufferAllocated = true;
+            }
+
+            return computeBufferAllocated;
         }
 
         private void ReleaseComputeBuffer(ref ComputeBuffer computeBuffer)
