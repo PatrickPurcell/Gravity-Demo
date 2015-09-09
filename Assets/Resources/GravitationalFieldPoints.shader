@@ -36,9 +36,9 @@ Shader "Custom/GravitationalFieldPoints"
 
             struct GS_Input
             {
-                float4 position : POSITION;
-                float  distance : TEXCOORD0;
-                float4 color    : COLOR;
+                float4 position  : POSITION;
+                float  displaced : TEXCOORD0;
+                float4 color     : COLOR;
             };
 
             struct FS_Input
@@ -52,7 +52,7 @@ Shader "Custom/GravitationalFieldPoints"
             struct FieldPoint
             {
                 float3 position;
-                float3 displacement;
+                float3 displaced;
             };
 
             uniform sampler2D _MainTex;
@@ -64,11 +64,11 @@ Shader "Custom/GravitationalFieldPoints"
             GS_Input VS_Main(uint id : SV_VertexID)
             {
                 float4 position =
-                float4(point_buffer[id].displacement, 1);
+                float4(point_buffer[id].displaced, 1);
                 position = mul(object_to_world, position);
 
-                float4 color =
-                lerp(float4(1, 1, 1, 0.01f), float4(1, 1, 1, 1), length(point_buffer[id].position - point_buffer[id].displacement));
+                float  l     = saturate(length(point_buffer[id].position - point_buffer[id].displaced));
+                float4 color = lerp(float4(0, 0, 0, 0), float4(0, 0, 0.5f, 0.1f), l);
                 //color = float4(1, 1, 1, 1);
 
                 GS_Input output =

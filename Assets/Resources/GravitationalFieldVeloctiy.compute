@@ -40,6 +40,16 @@ void ComputeVelocity(uint3 id : SV_DispatchThreadID)
     float3 velocity = beam_buffer[index].velocity;
     float  mass     = beam_buffer[index].mass;
 
-    int field_i = Index(position.x, position.y, position.z);
+    int field_i = Index(round(position.x),
+                        round(position.y),
+                        round(position.z));
 
+    float3 gravity_vector = point_buffer[field_i].displaced -
+                            point_buffer[field_i].position;
+
+    velocity += float4(gravity_vector, 1);
+    position += float4(velocity * delta_time, 1);;
+
+    beam_buffer[index].position = position;
+    beam_buffer[index].velocity = velocity;
 }

@@ -3,6 +3,7 @@ namespace GravityDemo
 {
     using UnityEngine;
 
+    [ExecuteInEditMode]
     public sealed class GravitationalBeam : MonoBehaviour
     {
         #region STRUCT DATA
@@ -40,6 +41,14 @@ namespace GravityDemo
 
         private Vector3 velocity;
         private Vector3 position;
+
+        [SerializeField, HideInInspector]
+        private Material material;
+
+        [SerializeField, HideInInspector]
+        private int index = -1;
+
+        private ComputeBuffer computeBuffer = null;
         #endregion
 
         #region PROPERTIES
@@ -50,6 +59,11 @@ namespace GravityDemo
             {
                 mass = value;
             }
+        }
+
+        public Vector3 Velocity
+        {
+            get { return velocity; }
         }
         #endregion
 
@@ -64,9 +78,23 @@ namespace GravityDemo
                 sphere.transform.parent = transform;
                 sphere.hideFlags        = HideFlags.HideInHierarchy;
                 sphere.name             = "Model";
+
+                material = Resources.Load<Material>("GravitationalBody");
             }
 
             velocity = transform.forward * initialForce;
+        }
+        #endregion
+
+        #region ON RENDER OBJECT
+        private void OnWillRenderObject()
+        {
+
+        }
+
+        private void OnRenderObject()
+        {
+
         }
         #endregion
 

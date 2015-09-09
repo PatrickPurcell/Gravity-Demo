@@ -7,6 +7,10 @@ namespace GravityDemo
     [ExecuteInEditMode]
     public sealed partial class GravitationalField : MonoBehaviour
     {
+        #region CONSTANTS
+
+        #endregion
+
         #region FIELDS
         [SerializeField, HideInInspector]
         private List<GravitationalBody> bodies = new List<GravitationalBody>();
@@ -78,18 +82,6 @@ namespace GravityDemo
         #region AWAKE
         private void Awake()
         {
-            if (gravitationalField == null)
-                gravitationalField = Resources.Load<ComputeShader>("GravitationalField");
-
-            if (gravitationalFieldVelocity == null)
-                gravitationalFieldVelocity = Resources.Load<ComputeShader>("GraviationalFieldVelocity");
-
-            if (pointsMaterial == null)
-                pointsMaterial = Resources.Load<Material>("GravitationalFieldPoints");
-
-            if (gridMaterial == null)
-                gridMaterial = Resources.Load<Material>("GravitationalFieldGrid");
-
             #if UNITY_EDITOR
             OnValidate();
             #endif
@@ -99,6 +91,18 @@ namespace GravityDemo
         #region ON ENABLE / DISABLE
         private void OnEnable()
         {
+            if (gravitationalField == null)
+                gravitationalField = Resources.Load<ComputeShader>("GravitationalField");
+
+            if (gravitationalFieldVelocity == null)
+                gravitationalFieldVelocity = Resources.Load<ComputeShader>("GravitationalFieldVeloctiy");
+
+            if (pointsMaterial == null)
+                pointsMaterial = Resources.Load<Material>("GravitationalFieldPoints");
+
+            if (gridMaterial == null)
+                gridMaterial = Resources.Load<Material>("GravitationalFieldGrid");
+
             computePointPositionsKernel = gravitationalField.FindKernel("ComputePointPositions");
             computeDisplacementKernel   = gravitationalField.FindKernel("ComputeDisplacement");
             createGridKernel            = gravitationalField.FindKernel("CreateGrid");
@@ -128,6 +132,7 @@ namespace GravityDemo
             ValidatePointBuffer();
             ValidateGridBuffer();
             ValidateBodyBuffer();
+            ValidateBeamBuffer();
 
             if (bodies.Count > 0)
             {
@@ -161,6 +166,21 @@ namespace GravityDemo
                 gridMaterial.SetMatrix("object_to_world", transform.localToWorldMatrix);
                 Graphics.DrawProcedural(MeshTopology.Points, gridBuffer.count);
             }
+
+            //if (beamData == null)
+            //{
+            //    beamData = new GravitationalBeam.Data[beamBuffer.count];
+            //    for (int i = 0; i < beams.Count; ++i)
+            //    {
+            //        beamData[i].mass = beams[i].Mass;
+            //        beamData[i].position = beams[i].transform.position;
+            //        beamData[i].velocity = beams[i].Velocity;
+            //    }
+            //
+            //    beamBuffer.SetData(beamData);
+            //}
+
+            gravitationalFieldVelocity.Dispatch(computeVelocityKernel, 1, 1, 1);
         }
         #endregion
 
@@ -177,7 +197,7 @@ namespace GravityDemo
             #endif
         }
 
-        private void AddBeam()
+        public void AddBeam()
         {
             GravitationalBeam beam =
             new GameObject().AddComponent<GravitationalBeam>();
@@ -253,7 +273,7 @@ namespace GravityDemo
                 if (beamBuffer == null || beamBuffer.count != beams.Count)
                 {
                     ReleaseComputeBuffer(ref beamBuffer);
-                    beamBuffer = new ComputeBuffer(beams.Count, sizeof(float) * 4);
+                    beamBuffer = new ComputeBuffer(beams.Count, GravitationalBeam.Data.Size);
 
                 }
             }
