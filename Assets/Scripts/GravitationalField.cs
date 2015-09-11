@@ -1,15 +1,14 @@
 ﻿
 namespace GravityDemo
 {
-    using System.Collections.Generic;
     using UnityEngine;
 
     [ExecuteInEditMode]
-    public sealed partial class GravitationalField : MonoBehaviour
+    public sealed partial class GravitationalField : GravitationalObject
     {
         #region FIELDS
         [SerializeField, HideInInspector]
-        private List<GravitationalBody> bodies = new List<GravitationalBody>();
+        private GravitationalBodyManager bodyManager;
 
         [SerializeField, HideInInspector] private int width  = 8;
         [SerializeField, HideInInspector] private int height = 8;
@@ -25,14 +24,10 @@ namespace GravityDemo
 
         private ComputeBuffer pointBuffer;
         private ComputeBuffer gridBuffer;
-        private ComputeBuffer bodyBuffer;
 
         private int computePointPositionsKernel;
         private int computeDisplacementKernel;
         private int computeGridKernel;
-        private int computeVelocityKernel;
-
-        private GravitationalBody.Data[] bodyDataEx;
         #endregion
 
         #region PROPERTIES
@@ -61,23 +56,27 @@ namespace GravityDemo
         #region ON ENABLE / DISABLE
         private void OnEnable()
         {
+            if (bodyManager == null)
+            {
+                bodyManager =
+                new GameObject().AddComponent<GravitationalBodyManager>();
+                bodyManager.transform.parent = transform;
+            }
+
             LoadResource("GravitationalField",         ref gravitationalField);
-            LoadResource("GravitationalFieldVeloctiy", ref gravitationalFieldVelocity);
+            //LoadResource("GravitationalFieldVeloctiy", ref gravitationalFieldVelocity);
             LoadResource("GravitationalFieldPoints",   ref pointsMaterial);
             LoadResource("GravitationalFieldGrid",     ref gridMaterial);
 
             computePointPositionsKernel = gravitationalField.FindKernel("ComputePointPositions");
             computeDisplacementKernel   = gravitationalField.FindKernel("ComputeDisplacement");
             computeGridKernel           = gravitationalField.FindKernel("ComputeGrid");
-
-            computeVelocityKernel = gravitationalFieldVelocity.FindKernel("ComputeVelocity");
         }
 
         private void OnDisable()
         {
             ReleaseComputeBuffer(ref pointBuffer);
             ReleaseComputeBuffer(ref gridBuffer);
-            ReleaseComputeBuffer(ref bodyBuffer);
         }
         #endregion
 
@@ -94,21 +93,11 @@ namespace GravityDemo
         {
             ValidatePointBuffer();
             ValidateGridBuffer();
-            ValidateBodyBuffer();
 
-            if (bodies.Count > 0)
-            {
-                for (int i = 0; i < bodies.Count; ++i)
-                {
-                    bodyDataEx[i].position   = bodies[i].transform.position;
-                    bodyDataEx[i].position.w = 1;
-                    bodyDataEx[i].mass       = bodies[i].Mass;
-                }
-
-                bodyBuffer.SetData(bodyDataEx);
-            }
-
-            gravitationalField.SetInt("body_count", bodies.Count);
+            if (bodyManager.Count > 0)
+                gravitationalField.SetBuffer(computeDisplacementKernel, "body_buffer",  bodyManager.BodyBuffer);
+            gravitationalField.SetInt("body_count", bodyManager.Count);
+            gravitationalField.SetBuffer(computeDisplacementKernel, "point_buffer", pointBuffer);
             gravitationalField.Dispatch(computeDisplacementKernel, ThreadsX, ThreadsY, ThreadsZ);
 
             if (drawPoints)
@@ -120,23 +109,11 @@ namespace GravityDemo
                 DrawField(gridMaterial);
             }
 
-            gravitationalFieldVelocity.Dispatch(computeVelocityKernel, 1, 1, 1);
+            //gravitationalFieldVelocity.Dispatch(computeVelocityKernel, 1, 1, 1);
         }
         #endregion
 
         #region METHODS
-        public void AddBody()
-        {
-            GravitationalBody body =
-            new GameObject().AddComponent<GravitationalBody>();
-            body.transform.parent = transform;
-            bodies.Add(body);
-
-            #if UNITY_EDITOR
-            UnityEditor.Selection.activeGameObject = body.gameObject;
-            #endif
-        }
-
         private void DrawField(Material material)
         {
             material.SetPass(0);
@@ -168,54 +145,6 @@ namespace GravityDemo
 
                 gridMaterial.SetBuffer("point_buffer", pointBuffer);
                 gridMaterial.SetBuffer("grid_buffer",  gridBuffer);
-            }
-        }
-
-        private void ValidateBodyBuffer()
-        {
-            if (bodies.Count > 0)
-            {
-                if (ValidateComputeBuffer(bodies.Count, GravitationalBody.Data.Size, ref bodyBuffer))
-                {
-                    gravitationalField.SetInt("body_count", bodies.Count);
-                    gravitationalField.SetBuffer(computeDisplacementKernel, "point_buffer", pointBuffer);
-                    gravitationalField.SetBuffer(computeDisplacementKernel, "body_buffer",  bodyBuffer);
-                }
-
-                if (bodyDataEx == null || bodyDataEx.Length != bodies.Count)
-                {
-                    bodyDataEx = new GravitationalBody.Data[bodies.Count];
-                }
-            }
-        }
-
-        private void LoadResource<T>(string resourcePath, ref T resource) where T : UnityEngine.Object
-        {
-            if (resource == null)
-                resource = Resources.Load<T>(resourcePath);
-        }
-
-        private bool ValidateComputeBuffer(int count, int stride, ref ComputeBuffer computeBuffer)
-        {
-            bool computeBufferAllocated = false;
-
-            if (computeBuffer == null || computeBuffer.count != count || computeBuffer.stride != stride)
-            {
-                ReleaseComputeBuffer(ref computeBuffer);
-                computeBuffer = new ComputeBuffer(count, stride);
-                computeBufferAllocated = true;
-            }
-
-            return computeBufferAllocated;
-        }
-
-        private void ReleaseComputeBuffer(ref ComputeBuffer computeBuffer)
-        {
-            if (computeBuffer != null)
-            {
-                computeBuffer.Release();
-                computeBuffer.Dispose();
-                computeBuffer = null;
             }
         }
         #endregion

@@ -5,7 +5,7 @@
 struct FieldPoint
 {
     float3 position;
-    float3 displaced_position;
+    float3 displacement;
 };
 
 struct BodyData

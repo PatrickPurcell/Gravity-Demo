@@ -11,21 +11,21 @@ RWStructuredBuffer<BodyData>   body_buffer;
 [numthreads(1, 1, 1)]
 void ComputeVelocity(uint3 id : SV_DispatchThreadID)
 {
-    int index = Index(id);
-    float4 position = body_buffer[index].position;
-    float3 velocity = body_buffer[index].velocity;
-    float  mass     = body_buffer[index].mass;
-
-    int field_i = Index(round(position.x),
-                        round(position.y),
-                        round(position.z));
-
-    float3 gravity_vector = point_buffer[field_i].displaced_position -
-                            point_buffer[field_i].position;
-
-    velocity += float4(gravity_vector, 1);
-    position += float4(velocity * delta_time, 1);;
-
-    body_buffer[index].position = position;
-    body_buffer[index].velocity = velocity;
+    //int index = Index(id);
+    //float4 position = body_buffer[index].position;
+    //float3 velocity = body_buffer[index].velocity;
+    //float  mass     = body_buffer[index].mass;
+    //
+    //int field_i = Index(round(position.x),
+    //                    round(position.y),
+    //                    round(position.z));
+    //
+    //float3 gravity_vector = point_buffer[field_i].displaced_position -
+    //                        point_buffer[field_i].position;
+    //
+    //velocity += float4(gravity_vector, 1);
+    //position += float4(velocity * delta_time, 1);
+    //
+    //body_buffer[index].position = position;
+    //body_buffer[index].velocity = velocity;
 }

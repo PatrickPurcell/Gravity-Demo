@@ -16,11 +16,9 @@ namespace GravityDemo
         #region ON VALIDATE
         private void OnValidate()
         {
-            #if UNITY_EDITOR
             Width  = _width;  _width  = Width;
             Height = _height; _height = Height;
             Depth  = _depth;  _depth  = Depth;
-            #endif
         }
         #endregion
     }

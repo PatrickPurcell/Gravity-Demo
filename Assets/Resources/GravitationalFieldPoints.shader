@@ -58,17 +58,17 @@ Shader "Custom/GravitationalFieldPoints"
 
             GS_Input VS_Main(uint id : SV_VertexID)
             {
-                float4 position =
-                float4(point_buffer[id].displaced_position, 1);
-                position = mul(object_to_world, position);
+                uint index = Index(id);
+                float3 position     = point_buffer[index].position;
+                float3 displacement = point_buffer[index].displacement;
 
-                float  l     = saturate(length(point_buffer[id].position - point_buffer[id].displaced_position));
+                float  l     = saturate(length(position - displacement));
                 float4 color = lerp(float4(0, 0, 0, 0), float4(0, 0, 0.5f, 0.1f), l);
                 //color = float4(1, 1, 1, 1);
 
                 GS_Input output =
                 {
-                    position,
+                    mul(object_to_world, float4(position + displacement, 1)),
                     distance(position, _WorldSpaceCameraPos),
                     color,
                 };

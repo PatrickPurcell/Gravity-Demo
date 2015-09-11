@@ -3,18 +3,8 @@ Shader "Custom/GravitationalBody"
 {
     SubShader
     {
-        Tags
-        {
-            "IgnoreProjector" = "True"
-            "RenderType"      = "Transparent"
-            "Queue"           = "Transparent"
-        }
-
         LOD      200
-        ZWrite   Off
         Lighting Off
-
-        Blend SrcAlpha OneMinusSrcAlpha
 
         Pass
         {
@@ -36,18 +26,22 @@ Shader "Custom/GravitationalBody"
             struct FS_Input
             {
                 float4 position : POSITION;
+                float4 color    : COLOR;
             };
 
-            RWStructuredBuffer<BodyData> body_data;
-            uniform float4x4 object_to_world;
+            uniform StructuredBuffer<BodyData> body_buffer;
+            uniform uint index;
 
             FS_Input VS_Main(VS_Input input)
             {
-                float4 position = input.position;
+                float4 position = body_buffer[index].position + input.position;
+                position.w = 1;
+                position = mul(UNITY_MATRIX_VP, position);
 
                 FS_Input output =
                 {
                     position,
+                    float4(body_buffer[index].position),
                 };
 
                 return output;
@@ -55,7 +49,7 @@ Shader "Custom/GravitationalBody"
 
             float4 FS_Main(FS_Input input) : COLOR
             {
-                return float4(0, 0, 0, 1);
+                return input.color;
             }
 
             ENDCG

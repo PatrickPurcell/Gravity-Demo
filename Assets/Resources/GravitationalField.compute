@@ -12,7 +12,13 @@ float3 offset;
 [numthreads(1, 1, 1)]
 void ComputePointPositions(uint3 id : SV_DispatchThreadID)
 {
-    point_buffer[Index(id)].position = float3(id.x, id.y, id.z) - offset;
+    FieldPoint field_point =
+    {
+        float3(id.x, id.y, id.z) - offset,
+        (float3)0,
+    };
+
+    point_buffer[Index(id)] = field_point;
 }
 
 #pragma kernel ComputeDisplacement
@@ -39,7 +45,7 @@ void ComputeDisplacement(uint3 id : SV_DispatchThreadID)
         //                        scalar curvature
     }
     
-    point_buffer[index].displaced_position = position + displacement;
+    point_buffer[index].displacement = displacement;
 }
 
 #pragma kernel ComputeGrid

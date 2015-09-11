@@ -1,6 +1,7 @@
 ﻿
 namespace GravityDemo
 {
+    using System;
     using UnityEngine;
 
     [ExecuteInEditMode]
@@ -30,17 +31,15 @@ namespace GravityDemo
         #endregion
 
         #region FIELDS
+        [SerializeField]
+        public float initialForce = 1; // meters / second
+
         [SerializeField, HideInInspector]
-        private GameObject sphere;
-
-
-        [SerializeField]
-        private float initialForce = 1; // meters / second
-
-        [SerializeField]
         private float mass = 1;
 
         private Vector3 velocity;
+
+        private bool altered;
         #endregion
 
         #region PROPERTIES
@@ -49,9 +48,21 @@ namespace GravityDemo
             get { return mass; }
             set
             {
-                mass = value;
+                if (mass != value)
+                {
+                    mass    = value;
+                    altered = true;
+                }
             }
         }
+
+        public int Index
+        { get; set; }
+        #endregion
+
+        #region EVENTS
+        public event Action<GravitationalBody> OnAltered   = delegate { };
+        public event Action<GravitationalBody> OnDestroyed = delegate { }; 
         #endregion
 
         #region AWAKE
@@ -59,34 +70,44 @@ namespace GravityDemo
         {
             name = typeof(GravitationalBody).Name;
 
-            if (sphere == null)
-            {
-                sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                sphere.transform.parent = transform;
-                sphere.hideFlags        = HideFlags.HideInHierarchy;
-                sphere.name             = "Model";
-            }
-
             velocity = transform.forward * initialForce;
+        }
+        #endregion
+
+        #region ON DESTROY
+        private void OnDestroy()
+        {
+            OnDestroyed(this);
         }
         #endregion
 
         #region UPDATE
         private void Update()
         {
-            transform.position += velocity * Time.deltaTime;
-        }
-        #endregion
+            if (!Application.isPlaying)
+            {
+                if (transform.hasChanged)
+                {
+                    transform.hasChanged = false;
+                    altered              = true;
+                }
 
-        #region ON DRAW GIZMOS
-        #if UNITY_EDITOR
-        private void OnDrawGizmos()
-        {
-            Gizmos.color = Color.white;
-            Gizmos.DrawSphere(transform.localPosition, transform.localScale.y * 0.45f);
-            UnityEditor.Handles.ArrowCap(0, transform.position, transform.rotation, initialForce);
+                if (altered)
+                {
+                    altered = false;
+                    OnAltered(this);
+                }
+            }
+
+            //transform.position += velocity * Time.deltaTime;
+            //
+            //if (!Application.isPlaying)
+            //{
+            //
+            //}
+            //
+            //transform.localScale = Vector3.one * transform.localScale.y;
         }
-        #endif
         #endregion
     }
 }
