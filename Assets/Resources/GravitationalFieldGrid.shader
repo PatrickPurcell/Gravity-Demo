@@ -98,7 +98,9 @@ Shader "Custom/GravitationalFieldGrid"
 
             float4 FS_Main(FS_Input input) : COLOR
             {
-                return float4(0,0,0,1);//input.color;
+                //return float4(0,0,0,1);//input.color;
+
+                return input.color;
             }
 
             ENDCG

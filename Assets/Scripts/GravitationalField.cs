@@ -28,6 +28,7 @@ namespace GravityDemo
         private int computePointPositionsKernel;
         private int computeDisplacementKernel;
         private int computeGridKernel;
+        private int computeVelocityKernel;
         #endregion
 
         #region PROPERTIES
@@ -64,13 +65,15 @@ namespace GravityDemo
             }
 
             LoadResource("GravitationalField",         ref gravitationalField);
-            //LoadResource("GravitationalFieldVeloctiy", ref gravitationalFieldVelocity);
+            LoadResource("GravitationalFieldVeloctiy", ref gravitationalFieldVelocity);
             LoadResource("GravitationalFieldPoints",   ref pointsMaterial);
             LoadResource("GravitationalFieldGrid",     ref gridMaterial);
 
             computePointPositionsKernel = gravitationalField.FindKernel("ComputePointPositions");
             computeDisplacementKernel   = gravitationalField.FindKernel("ComputeDisplacement");
             computeGridKernel           = gravitationalField.FindKernel("ComputeGrid");
+
+            computeVelocityKernel = gravitationalFieldVelocity.FindKernel("ComputeVelocity");
         }
 
         private void OnDisable()
@@ -109,7 +112,16 @@ namespace GravityDemo
                 DrawField(gridMaterial);
             }
 
-            //gravitationalFieldVelocity.Dispatch(computeVelocityKernel, 1, 1, 1);
+            if (Application.isPlaying)
+            {
+                gravitationalFieldVelocity.SetInt("w", W);
+                gravitationalFieldVelocity.SetInt("h", H);
+                gravitationalFieldVelocity.SetInt("d", D);
+                gravitationalFieldVelocity.SetFloat("delta_time", Time.deltaTime);
+                gravitationalFieldVelocity.SetBuffer(computeVelocityKernel, "point_buffer", pointBuffer);
+                gravitationalFieldVelocity.SetBuffer(computeVelocityKernel, "body_buffer", bodyManager.BodyBuffer);
+                gravitationalFieldVelocity.Dispatch(computeVelocityKernel, ThreadsX, ThreadsY, ThreadsZ);
+            }
         }
         #endregion
 
