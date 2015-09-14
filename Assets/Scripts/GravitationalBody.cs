@@ -31,18 +31,11 @@ namespace GravityDemo
         #endregion
 
         #region FIELDS
-        [SerializeField]
-        public float initialForce = 1; // meters / second
-
-        [SerializeField, HideInInspector]
-        private float mass = 1;
-
-        private Vector3 velocity;
+        [SerializeField] private float mass         = 1;
+        [SerializeField] private float initialSpeed = 1;
+        [SerializeField] private bool  render       = true;
 
         private bool altered;
-
-        [SerializeField]
-        private bool render = true;
         #endregion
 
         #region PROPERTIES
@@ -57,6 +50,12 @@ namespace GravityDemo
                     altered = true;
                 }
             }
+        }
+
+        public float InitialSpeed
+        {
+            get { return initialSpeed; }
+            set { initialSpeed = value; }
         }
 
         public bool Render
@@ -78,8 +77,13 @@ namespace GravityDemo
         private void Awake()
         {
             name = typeof(GravitationalBody).Name;
+        }
+        #endregion
 
-            velocity = transform.forward * initialForce;
+        #region ON VALIDATE
+        private void OnValidate()
+        {
+            altered = true;
         }
         #endregion
 
@@ -93,6 +97,10 @@ namespace GravityDemo
         #region UPDATE
         private void Update()
         {
+            if (transform.localScale.x != transform.localScale.y ||
+                transform.localScale.z != transform.localScale.z)
+                transform.localScale = Vector3.one * transform.localScale.y;
+
             if (!Application.isPlaying)
             {
                 if (transform.hasChanged)
@@ -107,16 +115,24 @@ namespace GravityDemo
                     OnAltered(this);
                 }
             }
-
-            //transform.position += velocity * Time.deltaTime;
-            //
-            //if (!Application.isPlaying)
-            //{
-            //
-            //}
-            //
-            //transform.localScale = Vector3.one * transform.localScale.y;
         }
+        #endregion
+
+        #region ON DRAW GIZMOS
+        #if UNITY_EDITOR
+        private void OnDrawGizmos()
+        {
+            if (!Application.isPlaying)
+            {
+                if (render)
+                {
+                    Gizmos.color = Color.white * 0;
+                    Gizmos.DrawSphere(transform.localPosition, transform.localScale.y);
+                    UnityEditor.Handles.ArrowCap(0, transform.position, transform.rotation, initialSpeed);
+                }
+            }
+        }
+        #endif
         #endregion
     }
 }

@@ -36,8 +36,10 @@ float3 Displacement(Body body, FieldPoint field_point)
     return displacement;
 }
 
-uint IndexOffet(uint i, uint3 offset)
+uint IndexOffset(uint i, uint x, uint y, uint z)
 {
+    uint3 offset =
+    clamp(uint3(x, y, z), (uint3)0, uint3(w - 1, h - 1, d - 1));
     return Index(i + offset);
 }
 
@@ -63,16 +65,16 @@ void ComputeVelocity(uint id : SV_DispatchThreadID)
         0             1
     */
 
-    uint3  indexer = (uint3)(position + float3(w - 1, h - 1, d - 1) * 0.5f);
+    uint3  index = (uint3)(position + float3(w - 1, h - 1, d - 1) * 0.5f);
     float3 displacements[8];
-    displacements[0] = Displacement(body, point_buffer[Index(indexer + uint3(0, 0, 0))]);
-    displacements[1] = Displacement(body, point_buffer[Index(indexer + uint3(1, 0, 0))]);
-    displacements[2] = Displacement(body, point_buffer[Index(indexer + uint3(0, 1, 0))]);
-    displacements[3] = Displacement(body, point_buffer[Index(indexer + uint3(1, 1, 0))]);
-    displacements[4] = Displacement(body, point_buffer[Index(indexer + uint3(0, 0, 1))]);
-    displacements[5] = Displacement(body, point_buffer[Index(indexer + uint3(1, 0, 1))]);
-    displacements[6] = Displacement(body, point_buffer[Index(indexer + uint3(0, 1, 1))]);
-    displacements[7] = Displacement(body, point_buffer[Index(indexer + uint3(1, 1, 1))]);
+    displacements[0] = Displacement(body, point_buffer[IndexOffset(index, 0, 0, 0)]);
+    displacements[1] = Displacement(body, point_buffer[IndexOffset(index, 1, 0, 0)]);
+    displacements[2] = Displacement(body, point_buffer[IndexOffset(index, 0, 1, 0)]);
+    displacements[3] = Displacement(body, point_buffer[IndexOffset(index, 1, 1, 0)]);
+    displacements[4] = Displacement(body, point_buffer[IndexOffset(index, 0, 0, 1)]);
+    displacements[5] = Displacement(body, point_buffer[IndexOffset(index, 1, 0, 1)]);
+    displacements[6] = Displacement(body, point_buffer[IndexOffset(index, 0, 1, 1)]);
+    displacements[7] = Displacement(body, point_buffer[IndexOffset(index, 1, 1, 1)]);
 
     float3 displacement = Trilerp(displacements[0],
                                   displacements[1],

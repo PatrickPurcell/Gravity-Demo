@@ -63,7 +63,7 @@ Shader "Custom/GravitationalFieldGrid"
                 float3 position     = point_buffer[id].position;
                 float3 displacement = point_buffer[id].displacement;
                 float  l            = saturate(length(position - displacement));
-                float4 color        = lerp(float4(0, 0, 0, 0), float4(0, 0, 0, 0.1f), l);
+                float4 color        = lerp(float4(0, 0, 0, 0), float4(0, 0, 0, 0.08f), l);
 
                 uint3 index = grid_buffer[id];
                 GS_Input output =
@@ -98,8 +98,6 @@ Shader "Custom/GravitationalFieldGrid"
 
             float4 FS_Main(FS_Input input) : COLOR
             {
-                //return float4(0,0,0,1);//input.color;
-
                 return input.color;
             }
 
