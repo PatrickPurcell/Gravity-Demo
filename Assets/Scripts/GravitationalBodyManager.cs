@@ -11,8 +11,8 @@ namespace GravityDemo
         [SerializeField, HideInInspector]
         private List<GravitationalBody> bodies;
 
-        private GravitationalBody.Data[] bodyData;
-        private ComputeBuffer            bodyBuffer;
+        private GravitationalBody.Data[] data;
+        private ComputeBuffer            buffer;
 
         [SerializeField, HideInInspector] private Mesh     mesh;
         [SerializeField, HideInInspector] private Material material;
@@ -22,8 +22,8 @@ namespace GravityDemo
         public int Count
         { get { return bodies.Count; } }
 
-        public ComputeBuffer BodyBuffer
-        { get { return bodyBuffer; } }
+        public ComputeBuffer Buffer
+        { get { return buffer; } }
         #endregion
 
         #region AWAKE
@@ -42,7 +42,7 @@ namespace GravityDemo
         #region ON VALIDATE
         private void OnValidate()
         {
-            UpdateBodyBuffer();
+            UpdateBuffers();
         }
         #endregion
 
@@ -52,12 +52,12 @@ namespace GravityDemo
             foreach (GravitationalBody body in bodies)
                 SubscribeToBodyEvents(body);
 
-            UpdateBodyBuffer();
+            UpdateBuffers();
         }
 
         private void OnDisable()
         {
-            ReleaseComputeBuffer(ref bodyBuffer);
+            ReleaseComputeBuffer(ref buffer);
         }
         #endregion
 
@@ -74,12 +74,14 @@ namespace GravityDemo
         private void OnRenderObject()
         {
             for (int i = 0; i < bodies.Count; ++i)
-            {
-                material.SetPass(0);
-                material.SetInt("index", i);
-                material.SetBuffer("body_buffer", bodyBuffer);
-                Graphics.DrawMeshNow(mesh, Matrix4x4.identity);
-            }
+                if (bodies[i].Render)
+                {
+                    material.SetPass(0);
+                    material.SetInt("index", i);
+                    material.SetFloat("scale", transform.localScale.y);
+                    material.SetBuffer("body_buffer", buffer);
+                    Graphics.DrawMeshNow(mesh, Matrix4x4.identity);
+                }
         }
         #endregion
 
@@ -97,7 +99,7 @@ namespace GravityDemo
 
             SubscribeToBodyEvents(body);
 
-            UpdateBodyBuffer();
+            UpdateBuffers();
         }
 
         public void RemoveBody(GravitationalBody body)
@@ -106,32 +108,32 @@ namespace GravityDemo
 
             UnsubscribeFromBodyEvents(body);
 
-            UpdateBodyBuffer();
+            UpdateBuffers();
         }
 
         private void OnBodyAltered(GravitationalBody body)
         {
-            UpdateBodyBuffer();
+            UpdateBuffers();
         }
 
-        private void UpdateBodyBuffer()
+        private void UpdateBuffers()
         {
             if (bodies.Count > 0)
             {
-                ValidateComputeBuffer(bodies.Count, GravitationalBody.Data.Size, ref bodyBuffer);
+                ValidateComputeBuffer(bodies.Count, GravitationalBody.Data.Size, ref buffer);
 
-                if (bodyData == null || bodyData.Length != bodies.Count)
-                    bodyData = new GravitationalBody.Data[bodies.Count];
+                if (data == null || data.Length != bodies.Count)
+                    data = new GravitationalBody.Data[bodies.Count];
 
                 for (int i = 0; i < bodies.Count; ++i)
                 {
-                    bodyData[i].position   = bodies[i].transform.position;
-                    bodyData[i].position.w = 1;
-                    bodyData[i].velocity   = bodies[i].transform.forward * bodies[i].initialForce;
-                    bodyData[i].mass       = bodies[i].Mass;
+                    data[i].position   = bodies[i].transform.position;
+                    data[i].position.w = 1;
+                    data[i].velocity   = bodies[i].transform.forward * bodies[i].initialForce;
+                    data[i].mass       = bodies[i].Mass;
                 }
 
-                bodyBuffer.SetData(bodyData);
+                buffer.SetData(data);
             }
         }
 

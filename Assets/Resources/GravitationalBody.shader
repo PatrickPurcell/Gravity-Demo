@@ -30,11 +30,12 @@ Shader "Custom/GravitationalBody"
             };
 
             uniform StructuredBuffer<BodyData> body_buffer;
-            uniform uint index;
+            uniform float scale;
+            uniform uint  index;
 
             FS_Input VS_Main(VS_Input input)
             {
-                float4 position = body_buffer[index].position + input.position;
+                float4 position = body_buffer[index].position + input.position * scale;
                 position.w = 1;
                 position = mul(UNITY_MATRIX_VP, position);
 
@@ -49,7 +50,7 @@ Shader "Custom/GravitationalBody"
 
             float4 FS_Main(FS_Input input) : COLOR
             {
-                return input.color;
+                return input.color * scale;
             }
 
             ENDCG

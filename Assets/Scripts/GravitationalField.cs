@@ -8,7 +8,7 @@ namespace GravityDemo
     {
         #region FIELDS
         [SerializeField, HideInInspector]
-        private GravitationalBodyManager bodyManager;
+        private GravitationalBodyManager bodies;
 
         [SerializeField, HideInInspector] private int width  = 8;
         [SerializeField, HideInInspector] private int height = 8;
@@ -57,15 +57,15 @@ namespace GravityDemo
         #region ON ENABLE / DISABLE
         private void OnEnable()
         {
-            if (bodyManager == null)
+            if (bodies == null)
             {
-                bodyManager =
+                bodies =
                 new GameObject().AddComponent<GravitationalBodyManager>();
-                bodyManager.transform.parent = transform;
+                bodies.transform.parent = transform;
             }
 
             LoadResource("GravitationalField",         ref gravitationalField);
-            LoadResource("GravitationalFieldVeloctiy", ref gravitationalFieldVelocity);
+            LoadResource("GravitationalFieldVelocity", ref gravitationalFieldVelocity);
             LoadResource("GravitationalFieldPoints",   ref pointsMaterial);
             LoadResource("GravitationalFieldGrid",     ref gridMaterial);
 
@@ -97,9 +97,9 @@ namespace GravityDemo
             ValidatePointBuffer();
             ValidateGridBuffer();
 
-            if (bodyManager.Count > 0)
-                gravitationalField.SetBuffer(computeDisplacementKernel, "body_buffer",  bodyManager.BodyBuffer);
-            gravitationalField.SetInt("body_count", bodyManager.Count);
+            if (bodies.Count > 0)
+                gravitationalField.SetBuffer(computeDisplacementKernel, "body_buffer", bodies.Buffer);
+            gravitationalField.SetInt("body_count", bodies.Count);
             gravitationalField.SetBuffer(computeDisplacementKernel, "point_buffer", pointBuffer);
             gravitationalField.Dispatch(computeDisplacementKernel, ThreadsX, ThreadsY, ThreadsZ);
 
@@ -112,20 +112,28 @@ namespace GravityDemo
                 DrawField(gridMaterial);
             }
 
-            if (Application.isPlaying)
-            {
-                gravitationalFieldVelocity.SetInt("w", W);
-                gravitationalFieldVelocity.SetInt("h", H);
-                gravitationalFieldVelocity.SetInt("d", D);
-                gravitationalFieldVelocity.SetFloat("delta_time", Time.deltaTime);
-                gravitationalFieldVelocity.SetBuffer(computeVelocityKernel, "point_buffer", pointBuffer);
-                gravitationalFieldVelocity.SetBuffer(computeVelocityKernel, "body_buffer", bodyManager.BodyBuffer);
-                gravitationalFieldVelocity.Dispatch(computeVelocityKernel, ThreadsX, ThreadsY, ThreadsZ);
-            }
+            ComputeVelocity();
         }
         #endregion
 
         #region METHODS
+        private void ComputeVelocity()
+        {
+            if (Application.isPlaying)
+            {
+                if (bodies.Count > 0)
+                {
+                    gravitationalFieldVelocity.SetInt   (                       "w",            W);
+                    gravitationalFieldVelocity.SetInt   (                       "h",            H);
+                    gravitationalFieldVelocity.SetInt   (                       "d",            D);
+                    gravitationalFieldVelocity.SetFloat (                       "delta_time",   Time.deltaTime);
+                    gravitationalFieldVelocity.SetBuffer(computeVelocityKernel, "point_buffer", pointBuffer);
+                    gravitationalFieldVelocity.SetBuffer(computeVelocityKernel, "body_buffer",  bodies.Buffer);
+                    gravitationalFieldVelocity.Dispatch(computeVelocityKernel, bodies.Count, 1, 1);
+                }
+            }
+        }
+
         private void DrawField(Material material)
         {
             material.SetPass(0);

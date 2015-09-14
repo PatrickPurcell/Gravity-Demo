@@ -40,6 +40,9 @@ namespace GravityDemo
         private Vector3 velocity;
 
         private bool altered;
+
+        [SerializeField]
+        private bool render = true;
         #endregion
 
         #region PROPERTIES
@@ -54,6 +57,12 @@ namespace GravityDemo
                     altered = true;
                 }
             }
+        }
+
+        public bool Render
+        {
+            get { return render; }
+            set { render = value; }
         }
 
         public int Index

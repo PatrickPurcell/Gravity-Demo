@@ -1,0 +1,96 @@
+﻿
+#include "GravitationalField.cginc"
+
+#pragma kernel ComputeVelocity
+
+RWStructuredBuffer<FieldPoint> point_buffer;
+RWStructuredBuffer<BodyData>   body_buffer;
+
+float delta_time;
+
+float3 Bilerp(float3 p_0, float3 p_1, float3 p_2, float3 p_3, float x, float y)
+{
+    return lerp(lerp(p_0, p_1, x),
+                lerp(p_2, p_3, x), y);
+}
+
+float3 Trilerp(float3 p_0, float3 p_1, float3 p_2, float3 p_3,
+               float3 p_4, float3 p_5, float3 p_6, float3 p_7, float x, float y, float z)
+{
+    return lerp(Bilerp(p_0, p_1, p_2, p_3, x, y),
+                Bilerp(p_4, p_5, p_6, p_7, x, y), z);
+}
+
+float3 Displacement(BodyData body, FieldPoint field_point)
+{
+    float3 displacement = field_point.displacement;
+
+    if (body.mass)
+    {
+        float3 v = body.position.xyz - field_point.position;
+        float  r = length(v);
+        float  f = G * (body.mass / (r * r));
+        displacement -= v / r * min(f, r);
+    }
+
+    return displacement;
+}
+
+uint IndexOffet(uint i, uint3 offset)
+{
+    return Index(i + offset);
+}
+
+[numthreads(1, 1, 1)]
+void ComputeVelocity(uint id : SV_DispatchThreadID)
+{
+    BodyData body     = body_buffer[id];
+    float4   position = body.position;
+    float3   velocity = body.velocity;
+    float    mass     = body.mass;
+
+    /*
+           6             7
+            +-----------+
+           /.          /|
+        2 / .       3 / |
+         +-----------+  |
+         |  .        |  |
+         |4 . . . . .|. + 5
+         | .         | /
+         |.          |/
+         +-----------+
+        0             1
+    */
+
+    uint3  indexer = (uint3)(position + float3(w - 1, h - 1, d - 1) * 0.5f);
+    float3 displacements[8];
+    displacements[0] = Displacement(body, point_buffer[Index(indexer + uint3(0, 0, 0))]);
+    displacements[1] = Displacement(body, point_buffer[Index(indexer + uint3(1, 0, 0))]);
+    displacements[2] = Displacement(body, point_buffer[Index(indexer + uint3(0, 1, 0))]);
+    displacements[3] = Displacement(body, point_buffer[Index(indexer + uint3(1, 1, 0))]);
+    displacements[4] = Displacement(body, point_buffer[Index(indexer + uint3(0, 0, 1))]);
+    displacements[5] = Displacement(body, point_buffer[Index(indexer + uint3(1, 0, 1))]);
+    displacements[6] = Displacement(body, point_buffer[Index(indexer + uint3(0, 1, 1))]);
+    displacements[7] = Displacement(body, point_buffer[Index(indexer + uint3(1, 1, 1))]);
+
+    float3 displacement = Trilerp(displacements[0],
+                                  displacements[1],
+                                  displacements[2],
+                                  displacements[3],
+                                  displacements[4],
+                                  displacements[5],
+                                  displacements[6],
+                                  displacements[7], frac(position.x),
+                                                    frac(position.y),
+                                                    frac(position.z));
+
+    if (mass)
+        displacement /= mass;
+    velocity     += displacement;
+    position.xyz += velocity * delta_time;
+
+    body_buffer[id].position = position;
+    body_buffer[id].velocity = velocity;
+}
+

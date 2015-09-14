@@ -24,9 +24,12 @@ namespace GravityDemo
         {
             if (!Application.isPlaying)
             {
-                Gizmos.color = Color.white;
-                Gizmos.DrawSphere(transform.localPosition, transform.localScale.y * 0.45f);
-                UnityEditor.Handles.ArrowCap(0, transform.position, transform.rotation, initialForce);
+                if (render)
+                {
+                    Gizmos.color = Color.white;
+                    Gizmos.DrawSphere(transform.localPosition, transform.localScale.y * 0.45f);
+                    UnityEditor.Handles.ArrowCap(0, transform.position, transform.rotation, initialForce);
+                }
             }
         }
         #endregion
