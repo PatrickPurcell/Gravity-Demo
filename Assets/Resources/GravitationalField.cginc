@@ -10,7 +10,7 @@ struct FieldPoint
     float3 displacement;
 };
 
-struct BodyData
+struct Body
 {
     float4 position;
     float3 velocity;
@@ -29,7 +29,7 @@ uint Index(uint3 i)
     return Index(i.x, i.y, i.z);
 }
 
-float3 GravitationalDisplacement(BodyData body, FieldPoint field_point)
+float3 GravitationalDisplacement(Body body, FieldPoint field_point)
 {
     float3 displacement = (float3)0;
 

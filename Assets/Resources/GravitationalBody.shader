@@ -29,7 +29,7 @@ Shader "Custom/GravitationalBody"
                 float4 color    : COLOR;
             };
 
-            uniform StructuredBuffer<BodyData> body_buffer;
+            uniform StructuredBuffer<Body> body_buffer;
             uniform float scale;
             uniform uint  index;
 

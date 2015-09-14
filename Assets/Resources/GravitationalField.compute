@@ -3,7 +3,7 @@
 
 RWStructuredBuffer<FieldPoint> point_buffer;
 RWStructuredBuffer<uint3>      grid_buffer;
-RWStructuredBuffer<BodyData>   body_buffer;
+RWStructuredBuffer<Body>       body_buffer;
 
 #pragma kernel ComputePointPositions
 

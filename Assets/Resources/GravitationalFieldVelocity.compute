@@ -4,7 +4,7 @@
 #pragma kernel ComputeVelocity
 
 RWStructuredBuffer<FieldPoint> point_buffer;
-RWStructuredBuffer<BodyData>   body_buffer;
+RWStructuredBuffer<Body>       body_buffer;
 
 float delta_time;
 
@@ -21,7 +21,7 @@ float3 Trilerp(float3 p_0, float3 p_1, float3 p_2, float3 p_3,
                 Bilerp(p_4, p_5, p_6, p_7, x, y), z);
 }
 
-float3 Displacement(BodyData body, FieldPoint field_point)
+float3 Displacement(Body body, FieldPoint field_point)
 {
     float3 displacement = field_point.displacement;
 
@@ -44,10 +44,10 @@ uint IndexOffet(uint i, uint3 offset)
 [numthreads(1, 1, 1)]
 void ComputeVelocity(uint id : SV_DispatchThreadID)
 {
-    BodyData body     = body_buffer[id];
-    float4   position = body.position;
-    float3   velocity = body.velocity;
-    float    mass     = body.mass;
+    Body   body     = body_buffer[id];
+    float4 position = body.position;
+    float3 velocity = body.velocity;
+    float  mass     = body.mass;
 
     /*
            6             7
@@ -93,4 +93,3 @@ void ComputeVelocity(uint id : SV_DispatchThreadID)
     body_buffer[id].position = position;
     body_buffer[id].velocity = velocity;
 }
-
