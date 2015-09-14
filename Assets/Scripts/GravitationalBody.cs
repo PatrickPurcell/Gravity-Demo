@@ -33,6 +33,7 @@ namespace GravityDemo
         #region FIELDS
         [SerializeField] private float mass         = 1;
         [SerializeField] private float initialSpeed = 1;
+        [SerializeField] private Color color        = Color.white;
         [SerializeField] private bool  render       = true;
 
         private bool altered;
@@ -56,6 +57,12 @@ namespace GravityDemo
         {
             get { return initialSpeed; }
             set { initialSpeed = value; }
+        }
+
+        public Color Color
+        {
+            get { return color; }
+            set { color = value; }
         }
 
         public bool Render

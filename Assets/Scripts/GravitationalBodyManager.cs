@@ -76,9 +76,12 @@ namespace GravityDemo
             for (int i = 0; i < bodies.Count; ++i)
                 if (bodies[i].Render)
                 {
+                    GravitationalBody body = bodies[i];
+
                     material.SetPass(0);
-                    material.SetInt("index", i);
-                    material.SetFloat("scale", bodies[i].transform.localScale.y);
+                    material.SetInt   ("index",       i);
+                    material.SetFloat ("scale",       body.transform.localScale.y);
+                    material.SetColor ("color",       body.Color);
                     material.SetBuffer("body_buffer", buffer);
                     Graphics.DrawMeshNow(mesh, Matrix4x4.identity);
                 }
@@ -141,10 +144,12 @@ namespace GravityDemo
 
                 for (int i = 0; i < bodies.Count; ++i)
                 {
-                    data[i].position   = bodies[i].transform.position;
+                    GravitationalBody body = bodies[i];
+
+                    data[i].position   = body.transform.position;
                     data[i].position.w = 1;
-                    data[i].velocity   = bodies[i].transform.forward * bodies[i].InitialSpeed;
-                    data[i].mass       = bodies[i].Mass;
+                    data[i].velocity   = body.transform.forward * body.InitialSpeed;
+                    data[i].mass       = body.Mass;
                 }
 
                 buffer.SetData(data);

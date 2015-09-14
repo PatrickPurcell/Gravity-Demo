@@ -38,8 +38,9 @@ Shader "Custom/GravitationalBody"
             };
 
             uniform StructuredBuffer<Body> body_buffer;
-            uniform float scale;
-            uniform uint  index;
+            uniform float4 color;
+            uniform float  scale;
+            uniform uint   index;
 
             FS_Input VS_Main(VS_Input input)
             {
@@ -74,7 +75,7 @@ Shader "Custom/GravitationalBody"
                 normalize(-input.world_position);
                 float n_dot_l = saturate(dot(light_direction, input.normal));
 
-                float4 output = float4(1, 1, 1, 1) * n_dot_l;
+                float4 output = color * n_dot_l;
                 output.a = 1;
 
                 return output + float4(0.15f, 0.15f, 0.15f, 0.15f);
