@@ -104,9 +104,11 @@ namespace GravityDemo
         #region UPDATE
         private void Update()
         {
-            if (transform.localScale.x != transform.localScale.y ||
-                transform.localScale.z != transform.localScale.y)
-                transform.localScale = Vector3.one * transform.localScale.y;
+            float scale = Mathf.Max(1, mass * 0.005f);
+            if (transform.localScale.x != scale ||
+                transform.localScale.y != scale ||
+                transform.localScale.z != scale)
+                transform.localScale = Vector3.one * scale;
 
             if (!Application.isPlaying)
             {

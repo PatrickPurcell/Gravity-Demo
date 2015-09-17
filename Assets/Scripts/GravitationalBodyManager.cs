@@ -16,6 +16,11 @@ namespace GravityDemo
 
         [SerializeField, HideInInspector] private Mesh     mesh;
         [SerializeField, HideInInspector] private Material material;
+
+        [SerializeField] private bool randomize  = false;
+        [SerializeField] private bool lockCamera = false;
+
+        private bool updateBuffer;
         #endregion
 
         #region PROPERTIES
@@ -42,7 +47,7 @@ namespace GravityDemo
         #region ON VALIDATE
         private void OnValidate()
         {
-            UpdateBuffers();
+            UpdateBuffer();
         }
         #endregion
 
@@ -52,12 +57,24 @@ namespace GravityDemo
             foreach (GravitationalBody body in bodies)
                 SubscribeToBodyEvents(body);
 
-            UpdateBuffers();
+            UpdateBuffer();
+
+            #if UNITY_EDITOR
+            if (lockCamera)
+            {
+                UnityEditor.EditorApplication.update -= EditorUpdate;
+                UnityEditor.EditorApplication.update += EditorUpdate;
+            }
+            #endif
         }
 
         private void OnDisable()
         {
             ReleaseComputeBuffer(ref buffer);
+
+            #if UNITY_EDITOR
+            UnityEditor.EditorApplication.update -= EditorUpdate;
+            #endif
         }
         #endregion
 
@@ -67,7 +84,23 @@ namespace GravityDemo
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
             transform.localScale    = Vector3.one;
+
+            if (updateBuffer)
+                UpdateBuffer();
         }
+
+        #if UNITY_EDITOR
+        private static void EditorUpdate()
+        {
+            if (UnityEditor.SceneView.lastActiveSceneView != null)
+            {
+                Transform sceneView =
+                UnityEditor.SceneView.lastActiveSceneView.camera.transform;
+                Camera.main.transform.position = sceneView.position;
+                Camera.main.transform.rotation = sceneView.rotation;
+            }
+        }
+        #endif
         #endregion
 
         #region ON RENDER OBJECT
@@ -96,27 +129,30 @@ namespace GravityDemo
             body.transform.parent = transform;
             bodies.Add(body);
 
-            //body.Mass                    = Random.Range(1, 500);
-            //body.InitialSpeed            = Random.Range(0, 4);
-            //body.transform.localRotation = Random.rotationUniform;
-            //
-            //GravitationalField gravitationalField =
-            //transform.parent.GetComponent<GravitationalField>();
-            //float w = gravitationalField.Width  * 0.5f;
-            //float h = gravitationalField.Height * 0.5f;
-            //float d = gravitationalField.Depth  * 0.5f;
-            //float x = Random.Range(-w, w);
-            //float y = Random.Range(-h, h);
-            //float z = Random.Range(-d, d);
-            //body.transform.localPosition = new Vector3(x, y, z);
-            //
+            if (randomize)
+            {
+                body.Mass                    = Random.Range(1, 500);
+                body.InitialSpeed            = Random.Range(0, 4);
+                body.transform.localRotation = Random.rotationUniform;
+                
+                GravitationalField gravitationalField =
+                transform.parent.GetComponent<GravitationalField>();
+                float w = gravitationalField.Width  * 0.5f;
+                float h = gravitationalField.Height * 0.5f;
+                float d = gravitationalField.Depth  * 0.5f;
+                float x = Random.Range(-w, w);
+                float y = Random.Range(-h, h);
+                float z = Random.Range(-d, d);
+                body.transform.localPosition = new Vector3(x, y, z);
+            }
+
             //#if UNITY_EDITOR
             //UnityEditor.Selection.activeGameObject = body.gameObject;
             //#endif
 
             SubscribeToBodyEvents(body);
 
-            UpdateBuffers();
+            UpdateBuffer();
         }
 
         public void RemoveBody(GravitationalBody body)
@@ -125,16 +161,19 @@ namespace GravityDemo
 
             UnsubscribeFromBodyEvents(body);
 
-            UpdateBuffers();
+            //UpdateBuffer();
+            updateBuffer = true;
         }
 
         private void OnBodyAltered(GravitationalBody body)
         {
-            UpdateBuffers();
+            UpdateBuffer();
         }
 
-        private void UpdateBuffers()
+        private void UpdateBuffer()
         {
+            updateBuffer = false;
+
             if (bodies.Count > 0)
             {
                 ValidateComputeBuffer(bodies.Count, GravitationalBody.Data.Size, ref buffer);
