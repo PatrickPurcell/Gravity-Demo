@@ -19,7 +19,7 @@ namespace GravityDemo
         [SerializeField, HideInInspector] private Material      pointsMaterial;
         [SerializeField, HideInInspector] private Material      gridMaterial;
 
-        [SerializeField] private bool drawPoints = true;
+        [SerializeField] private bool drawPoints = false;
         [SerializeField] private bool drawGrid   = true;
 
         private ComputeBuffer pointBuffer;
