@@ -36,11 +36,11 @@ float3 Displacement(Body body, FieldPoint field_point)
     return displacement;
 }
 
-uint IndexOffset(uint i, uint x, uint y, uint z)
+uint IndexOffset(uint3 i, uint x, uint y, uint z)
 {
-    uint3 offset =
-    clamp(uint3(x, y, z), (uint3)0, uint3(w - 1, h - 1, d - 1));
-    return Index(i + offset);
+    uint3 index =
+    clamp(i + uint3(x, y, z), (uint3)0, uint3(w - 1, h - 1, d - 1));
+    return Index(index);
 }
 
 [numthreads(1, 1, 1)]
