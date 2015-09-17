@@ -105,7 +105,7 @@ namespace GravityDemo
         private void Update()
         {
             if (transform.localScale.x != transform.localScale.y ||
-                transform.localScale.z != transform.localScale.z)
+                transform.localScale.z != transform.localScale.y)
                 transform.localScale = Vector3.one * transform.localScale.y;
 
             if (!Application.isPlaying)
