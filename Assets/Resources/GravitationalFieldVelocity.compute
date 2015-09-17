@@ -43,6 +43,23 @@ uint IndexOffset(uint3 i, uint x, uint y, uint z)
     return Index(index);
 }
 
+float WrapComponent(float dimension, float component)
+{
+    float d = dimension * 0.5f;
+    
+    if (component < -d)
+    {
+        component = d - (-d - component);
+    }
+    else
+    if (component > d)
+    {
+        component = -d + (component - d);
+    }
+
+    return component;
+}
+
 [numthreads(1, 1, 1)]
 void ComputeVelocity(uint id : SV_DispatchThreadID)
 {
@@ -91,6 +108,10 @@ void ComputeVelocity(uint id : SV_DispatchThreadID)
         displacement /= mass;
     velocity     += displacement;
     position.xyz += velocity * delta_time;
+
+    position.x = WrapComponent(w, position.x);
+    position.y = WrapComponent(h, position.y);
+    position.z = WrapComponent(d, position.z);
 
     body_buffer[id].position = position;
     body_buffer[id].velocity = velocity;
