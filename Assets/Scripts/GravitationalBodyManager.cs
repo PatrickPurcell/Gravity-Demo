@@ -102,9 +102,10 @@ namespace GravityDemo
 
             if (randomize)
             {
-                body.Mass                    = Random.Range(1, 500);
-                body.InitialSpeed            = Random.Range(0, 4);
-                body.transform.localRotation = Random.rotationUniform;
+                body.Mass         = Random.Range(1, 500);
+                body.InitialSpeed = Random.Range(0, 4);
+                body.transform.localEulerAngles =
+                new Vector3(0, Random.Range(0, 360), 0);
                 
                 GravitationalField gravitationalField =
                 transform.parent.GetComponent<GravitationalField>();
@@ -112,14 +113,19 @@ namespace GravityDemo
                 float h = gravitationalField.Height * 0.5f;
                 float d = gravitationalField.Depth  * 0.5f;
                 float x = Random.Range(-w, w);
-                float y = Random.Range(-h, h);
-                float z = Random.Range(-d, d);
-                body.transform.localPosition = new Vector3(x, y, z);
+                float z = Random.Range(-h, h);
+                float r = Random.Range(0.0f, 1.0f);
+                float g = Random.Range(0.0f, 1.0f);
+                float b = Random.Range(0.0f, 1.0f);
+                body.transform.localPosition = new Vector3(x, 0, z);
+                body.Color                   = new Color(r, g, b, 1);
             }
-
-            #if UNITY_EDITOR
-            UnityEditor.Selection.activeGameObject = body.gameObject;
-            #endif
+            else
+            {
+                #if UNITY_EDITOR
+                UnityEditor.Selection.activeGameObject = body.gameObject;
+                #endif
+            }
 
             SubscribeToBodyEvents(body);
             UpdateBuffer(true);
