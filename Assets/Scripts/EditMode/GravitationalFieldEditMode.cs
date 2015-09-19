@@ -11,6 +11,7 @@ namespace GravityDemo
         [SerializeField] private int _width  = 8;
         [SerializeField] private int _height = 8;
         [SerializeField] private int _depth  = 8;
+        [SerializeField] private int _margin = 8;
         #endif
 
         #region ON VALIDATE
@@ -19,6 +20,7 @@ namespace GravityDemo
             Width  = _width;  _width  = Width;
             Height = _height; _height = Height;
             Depth  = _depth;  _depth  = Depth;
+            Margin = _margin; _margin = Margin;
         }
         #endregion
     }

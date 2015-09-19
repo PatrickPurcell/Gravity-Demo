@@ -13,6 +13,7 @@ namespace GravityDemo
         [SerializeField, HideInInspector] private int width  = 8;
         [SerializeField, HideInInspector] private int height = 8;
         [SerializeField, HideInInspector] private int depth  = 8;
+        [SerializeField, HideInInspector] private int margin = 8;
 
         [SerializeField, HideInInspector] private ComputeShader gravitationalField;
         [SerializeField, HideInInspector] private ComputeShader gravitationalFieldVelocity;
@@ -35,6 +36,7 @@ namespace GravityDemo
         public int Width  { get { return width;  } set { width  = Mathf.Max(1, value); } }
         public int Height { get { return height; } set { height = Mathf.Max(1, value); } }
         public int Depth  { get { return depth;  } set { depth  = Mathf.Max(1, value); } }
+        public int Margin { get { return margin; } set { margin = Mathf.Max(0, value); } }
 
         private int W          { get { return width  + 1; } }
         private int H          { get { return height + 1; } }
@@ -126,6 +128,7 @@ namespace GravityDemo
                     gravitationalFieldVelocity.SetInt   (                       "w",            W);
                     gravitationalFieldVelocity.SetInt   (                       "h",            H);
                     gravitationalFieldVelocity.SetInt   (                       "d",            D);
+                    gravitationalFieldVelocity.SetInt   (                       "margin",       margin);
                     gravitationalFieldVelocity.SetFloat (                       "delta_time",   Time.deltaTime);
                     gravitationalFieldVelocity.SetBuffer(computeVelocityKernel, "point_buffer", pointBuffer);
                     gravitationalFieldVelocity.SetBuffer(computeVelocityKernel, "body_buffer",  bodies.Buffer);
@@ -172,9 +175,16 @@ namespace GravityDemo
         #region ON DRAW GIZMOS
         private void OnDrawGizmos()
         {
-            Gizmos.color  = new Color(1, 1, 1, 0.25f);
             Gizmos.matrix = transform.localToWorldMatrix;
+
+            Gizmos.color = new Color(1, 1, 1, 0.25f);
             Gizmos.DrawWireCube(Vector3.zero, new Vector3(width, height, depth));
+
+            int w_margin = margin + width  + margin;
+            int h_margin = margin + height + margin;
+            int d_margin = margin + depth  + margin;
+            Gizmos.color = new Color(1, 1, 1, 0.15f);
+            Gizmos.DrawWireCube(Vector3.zero, new Vector3(w_margin, h_margin, d_margin));
         }
         #endregion
     }

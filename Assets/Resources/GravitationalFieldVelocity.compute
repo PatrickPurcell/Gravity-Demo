@@ -6,6 +6,7 @@
 RWStructuredBuffer<FieldPoint> point_buffer;
 RWStructuredBuffer<Body>       body_buffer;
 
+int   margin;
 float delta_time;
 
 float3 Bilerp(float3 p_0, float3 p_1, float3 p_2, float3 p_3, float x, float y)
@@ -38,14 +39,12 @@ float3 Displacement(Body body, FieldPoint field_point)
 
 uint IndexOffset(uint3 i, uint x, uint y, uint z)
 {
-    uint3 index =
-    clamp(i + uint3(x, y, z), (uint3)0, uint3(w - 1, h - 1, d - 1));
-    return Index(index);
+    return Index(clamp(i + uint3(x, y, z), (uint3)0, uint3(w - 1, h - 1, d - 1)));
 }
 
 float WrapComponent(float dimension, float component)
 {
-    float d = dimension * 0.5f;
+    float d = dimension * 0.5f + margin;
     
     if (component < -d)
     {
@@ -82,7 +81,11 @@ void ComputeVelocity(uint id : SV_DispatchThreadID)
         0             1
     */
 
-    uint3  index = (uint3)(position + float3(w - 1, h - 1, d - 1) * 0.5f);
+
+    uint3 index = uint3(position.x + (w - 1) * 0.5f,
+                        position.y + (h - 1) * 0.5f,
+                        position.z + (d - 1) * 0.5f);
+
     float3 displacements[8];
     displacements[0] = Displacement(body, point_buffer[IndexOffset(index, 0, 0, 0)]);
     displacements[1] = Displacement(body, point_buffer[IndexOffset(index, 1, 0, 0)]);
