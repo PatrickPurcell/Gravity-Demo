@@ -19,5 +19,13 @@ namespace GravityDemo
             Selection.activeGameObject = gameObject;
         }
         #endregion
+
+        #region ON INSPECTOR GUI
+        public override void OnInspectorGUI()
+        {
+            if (!Application.isPlaying)
+                base.OnInspectorGUI();
+        }
+        #endregion
     }
 }

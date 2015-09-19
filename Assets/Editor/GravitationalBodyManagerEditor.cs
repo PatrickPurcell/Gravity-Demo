@@ -10,24 +10,27 @@ namespace GravityDemo
         #region ON INSPECTOR GUI
         public override void OnInspectorGUI()
         {
-            base.OnInspectorGUI();
+            if (!Application.isPlaying)
+            {
+                base.OnInspectorGUI();
 
-            GravitationalBodyManager manager =
-            target as GravitationalBodyManager;
+                GravitationalBodyManager manager =
+                target as GravitationalBodyManager;
 
-            EditorGUILayout.Space();
-            bool guiEnabled = GUI.enabled;
-            GUI.enabled = false;
-            EditorGUILayout.IntField("Count", manager.Count);
-            GUI.enabled = guiEnabled;
-            EditorGUILayout.Space();
+                EditorGUILayout.Space();
+                bool guiEnabled = GUI.enabled;
+                GUI.enabled = false;
+                EditorGUILayout.IntField("Count", manager.Count);
+                GUI.enabled = guiEnabled;
+                EditorGUILayout.Space();
 
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.Space();
-            if (GUILayout.Button("Add Body"))
-                manager.AddBody();
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.Space();
+                if (GUILayout.Button("Add Body"))
+                    manager.AddBody();
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.Space();
+            }
         }
         #endregion
     }

@@ -5,6 +5,15 @@ namespace GravityDemo
 
     public abstract class GravitationalObject : MonoBehaviour
     {
+        #region UPDATE
+        protected virtual void Update()
+        {
+            transform.localPosition = Vector3.zero;
+            transform.localRotation = Quaternion.identity;
+            transform.localScale    = Vector3.one;
+        }
+        #endregion
+
         #region METHODS
         protected void LoadResource<T>(string resourcePath, ref T resource) where T : Object
         {

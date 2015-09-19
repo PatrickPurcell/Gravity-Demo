@@ -17,8 +17,7 @@ namespace GravityDemo
         [SerializeField, HideInInspector] private Mesh     mesh;
         [SerializeField, HideInInspector] private Material material;
 
-        [SerializeField] private bool randomize  = false;
-        [SerializeField] private bool lockCamera = false;
+        [SerializeField] private bool randomize = false;
 
         private bool updateBuffer;
         #endregion
@@ -47,7 +46,7 @@ namespace GravityDemo
         #region ON VALIDATE
         private void OnValidate()
         {
-            UpdateBuffer();
+            UpdateBuffer(true);
         }
         #endregion
 
@@ -57,50 +56,22 @@ namespace GravityDemo
             foreach (GravitationalBody body in bodies)
                 SubscribeToBodyEvents(body);
 
-            UpdateBuffer();
-
-            #if UNITY_EDITOR
-            if (lockCamera)
-            {
-                UnityEditor.EditorApplication.update -= EditorUpdate;
-                UnityEditor.EditorApplication.update += EditorUpdate;
-            }
-            #endif
+            UpdateBuffer(true);
         }
 
         private void OnDisable()
         {
             ReleaseComputeBuffer(ref buffer);
-
-            #if UNITY_EDITOR
-            UnityEditor.EditorApplication.update -= EditorUpdate;
-            #endif
         }
         #endregion
 
         #region UPDATE
-        private void Update()
+        protected override void Update()
         {
-            transform.localPosition = Vector3.zero;
-            transform.localRotation = Quaternion.identity;
-            transform.localScale    = Vector3.one;
+            base.Update();
 
-            if (updateBuffer)
-                UpdateBuffer();
+            UpdateBuffer();
         }
-
-        #if UNITY_EDITOR
-        private static void EditorUpdate()
-        {
-            if (UnityEditor.SceneView.lastActiveSceneView != null)
-            {
-                Transform sceneView =
-                UnityEditor.SceneView.lastActiveSceneView.camera.transform;
-                Camera.main.transform.position = sceneView.position;
-                Camera.main.transform.rotation = sceneView.rotation;
-            }
-        }
-        #endif
         #endregion
 
         #region ON RENDER OBJECT
@@ -151,53 +122,52 @@ namespace GravityDemo
             //#endif
 
             SubscribeToBodyEvents(body);
-
-            UpdateBuffer();
+            UpdateBuffer(true);
         }
 
         public void RemoveBody(GravitationalBody body)
         {
-            bodies.Remove(body);
-
             UnsubscribeFromBodyEvents(body);
-
-            //UpdateBuffer();
+            bodies.Remove(body);
             updateBuffer = true;
         }
 
         private void OnBodyAltered(GravitationalBody body)
         {
-            UpdateBuffer();
+            UpdateBuffer(true);
         }
 
-        private void UpdateBuffer()
+        private void UpdateBuffer(bool forceUpdate = false)
         {
-            updateBuffer = false;
-
-            if (bodies.Count > 0)
+            if (updateBuffer || forceUpdate)
             {
-                ValidateComputeBuffer(bodies.Count, GravitationalBody.Data.Size, ref buffer);
+                updateBuffer = false;
 
-                if (data == null || data.Length != bodies.Count)
-                    data = new GravitationalBody.Data[bodies.Count];
-
-                for (int i = 0; i < bodies.Count; ++i)
+                if (bodies.Count > 0)
                 {
-                    GravitationalBody body = bodies[i];
+                    ValidateComputeBuffer(bodies.Count, GravitationalBody.Data.Size, ref buffer);
 
-                    Vector3 position = body.transform.position;
-                    if (position.x % 1 == 0 &&
-                        position.y % 1 == 0 &&
-                        position.z % 1 == 0)
-                        position[Random.Range(0, 3)] += 0.0001f;
+                    if (data == null || data.Length != bodies.Count)
+                        data = new GravitationalBody.Data[bodies.Count];
 
-                    data[i].position   = position;
-                    data[i].position.w = 1;
-                    data[i].velocity   = body.transform.forward * body.InitialSpeed;
-                    data[i].mass       = body.Mass;
+                    for (int i = 0; i < bodies.Count; ++i)
+                    {
+                        GravitationalBody body = bodies[i];
+
+                        Vector3 position = body.transform.position;
+                        if (position.x % 1 == 0 &&
+                            position.y % 1 == 0 &&
+                            position.z % 1 == 0)
+                            position[Random.Range(0, 3)] += 0.0001f;
+
+                        data[i].position   = position;
+                        data[i].position.w = 1;
+                        data[i].velocity   = body.transform.forward * body.InitialSpeed;
+                        data[i].mass       = body.Mass;
+                    }
+
+                    buffer.SetData(data);
                 }
-
-                buffer.SetData(data);
             }
         }
 

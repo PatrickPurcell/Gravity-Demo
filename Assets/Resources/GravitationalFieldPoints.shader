@@ -63,7 +63,7 @@ Shader "Custom/GravitationalFieldPoints"
                 float3 displacement = point_buffer[index].displacement;
 
                 float  l     = saturate(length(position - displacement));
-                float4 color = lerp(float4(0, 0, 0, 0), float4(0, 0, 0.5f, 0.08f), l);
+                float4 color = lerp(float4(1, 0, 0, 0), float4(0, 0, 0.5f, 0.08f), l);
 
                 GS_Input output =
                 {
