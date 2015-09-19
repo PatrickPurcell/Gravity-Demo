@@ -117,9 +117,9 @@ namespace GravityDemo
                 body.transform.localPosition = new Vector3(x, y, z);
             }
 
-            //#if UNITY_EDITOR
-            //UnityEditor.Selection.activeGameObject = body.gameObject;
-            //#endif
+            #if UNITY_EDITOR
+            UnityEditor.Selection.activeGameObject = body.gameObject;
+            #endif
 
             SubscribeToBodyEvents(body);
             UpdateBuffer(true);

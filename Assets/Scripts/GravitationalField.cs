@@ -4,16 +4,27 @@ namespace GravityDemo
     using UnityEngine;
 
     [ExecuteInEditMode]
-    public sealed partial class GravitationalField : GravitationalObject
+    public sealed class GravitationalField : GravitationalObject
     {
+        #region CONSTANTS
+        private const int DefaultDimensions = 8;
+        #endregion
+
         #region FIELDS
         [SerializeField, HideInInspector]
         private GravitationalBodyManager bodies;
 
-        [SerializeField, HideInInspector] private int width  = 8;
-        [SerializeField, HideInInspector] private int height = 8;
-        [SerializeField, HideInInspector] private int depth  = 8;
-        [SerializeField, HideInInspector] private int margin = 8;
+        [SerializeField, HideInInspector] private int width  = DefaultDimensions;
+        [SerializeField, HideInInspector] private int height = DefaultDimensions;
+        [SerializeField, HideInInspector] private int depth  = DefaultDimensions;
+        [SerializeField, HideInInspector] private int margin = DefaultDimensions;
+
+        #if UNITY_EDITOR
+        [SerializeField] private int _width  = DefaultDimensions;
+        [SerializeField] private int _height = DefaultDimensions;
+        [SerializeField] private int _depth  = DefaultDimensions;
+        [SerializeField] private int _margin = DefaultDimensions;
+        #endif
 
         [SerializeField, HideInInspector] private ComputeShader gravitationalField;
         [SerializeField, HideInInspector] private ComputeShader gravitationalFieldVelocity;
@@ -52,6 +63,18 @@ namespace GravityDemo
         {
             #if UNITY_EDITOR
             OnValidate();
+            #endif
+        }
+        #endregion
+
+        #region ON VALIDATE
+        private void OnValidate()
+        {
+            #if UNITY_EDITOR
+            Width  = _width;  _width  = Width;
+            Height = _height; _height = Height;
+            Depth  = _depth;  _depth  = Depth;
+            Margin = _margin; _margin = Margin;
             #endif
         }
         #endregion
@@ -175,8 +198,6 @@ namespace GravityDemo
         #region ON DRAW GIZMOS
         private void OnDrawGizmos()
         {
-            Gizmos.matrix = transform.localToWorldMatrix;
-
             Gizmos.color = new Color(1, 1, 1, 0.25f);
             Gizmos.DrawWireCube(Vector3.zero, new Vector3(width, height, depth));
 
