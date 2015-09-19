@@ -3,11 +3,6 @@ Shader "Custom/GravitationalBody"
 {
     SubShader
     {
-        Tags
-        {
-            "LightMode" = "ForwardBase"
-        }
-
         LOD      200
         Lighting Off
 
@@ -76,9 +71,8 @@ Shader "Custom/GravitationalBody"
                 float n_dot_l = saturate(dot(light_direction, input.normal));
 
                 float4 output = color * n_dot_l;
-                output.a = 1;
 
-                return output + float4(0.15f, 0.15f, 0.15f, 0.15f);
+                return output + float4(0.15f, 0.15f, 0.15f, 1);
             }
 
             ENDCG

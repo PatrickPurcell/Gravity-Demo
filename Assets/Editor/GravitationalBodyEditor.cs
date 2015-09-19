@@ -6,6 +6,7 @@ namespace GravityDemo
     using UnityEditor;
     using UnityEngine;
 
+    [CanEditMultipleObjects                 ]
     [CustomEditor(typeof(GravitationalBody))]
     public class GravitationalBodyEditor : Editor
     {

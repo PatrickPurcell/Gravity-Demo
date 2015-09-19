@@ -2,7 +2,7 @@
 #ifndef GRAVITATIONAL_FIELD_CGINC
 #define GRAVITATIONAL_FIELD_CGINC
 
-#define G (0.6674f) // TODO : Normalize units
+#define G (0.6674f)
 
 struct FieldPoint
 {

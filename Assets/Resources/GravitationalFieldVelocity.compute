@@ -22,24 +22,15 @@ float3 Trilerp(float3 p_0, float3 p_1, float3 p_2, float3 p_3,
                 Bilerp(p_4, p_5, p_6, p_7, x, y), z);
 }
 
-float3 Displacement(Body body, FieldPoint field_point)
-{
-    float3 displacement = field_point.displacement;
-
-    if (body.mass)
-    {
-        float3 v = body.position.xyz - field_point.position;
-        float  r = length(v);
-        float  f = G * (body.mass / (r * r));
-        displacement -= v / r * min(f, r);
-    }
-
-    return displacement;
-}
-
 uint IndexOffset(uint3 i, uint x, uint y, uint z)
 {
     return Index(clamp(i + uint3(x, y, z), (uint3)0, uint3(w - 1, h - 1, d - 1)));
+}
+
+float3 Displacement(Body body, FieldPoint field_point)
+{
+    return field_point.displacement -
+           GravitationalDisplacement(body, field_point);
 }
 
 float WrapComponent(float dimension, float component)
@@ -47,14 +38,10 @@ float WrapComponent(float dimension, float component)
     float d = dimension * 0.5f + margin;
     
     if (component < -d)
-    {
         component = d - (-d - component);
-    }
     else
     if (component > d)
-    {
         component = -d + (component - d);
-    }
 
     return component;
 }
@@ -86,7 +73,7 @@ void ComputeVelocity(uint id : SV_DispatchThreadID)
                         position.z + (d - 1) * 0.5f);
 
     float3 displacements[8];
-    displacements[0] = Displacement(body, point_buffer[IndexOffset(index, 0, 0, 0)]);
+    displacements[0] = Displacement(body, point_buffer[Index      (index)         ]);
     displacements[1] = Displacement(body, point_buffer[IndexOffset(index, 1, 0, 0)]);
     displacements[2] = Displacement(body, point_buffer[IndexOffset(index, 0, 1, 0)]);
     displacements[3] = Displacement(body, point_buffer[IndexOffset(index, 1, 1, 0)]);
