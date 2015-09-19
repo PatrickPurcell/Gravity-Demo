@@ -4,6 +4,7 @@ Shader "Custom/GravitationalFieldPoints"
     Properties
     {
         _MainTex("Texture", 2D         ) = "white" { }
+        _Color  ("Color",   Color      ) = (0, 0, 0.5, 0.08)
         _Size   ("Size",    Range(0, 2)) = 0.15
     }
 
@@ -51,6 +52,7 @@ Shader "Custom/GravitationalFieldPoints"
             };
 
             uniform sampler2D _MainTex;
+            uniform float4    _Color;
             uniform float     _Size;
 
             uniform StructuredBuffer<FieldPoint> point_buffer;
@@ -63,7 +65,7 @@ Shader "Custom/GravitationalFieldPoints"
                 float3 displacement = point_buffer[index].displacement;
 
                 float  l     = saturate(length(position - displacement));
-                float4 color = lerp(float4(1, 0, 0, 0), float4(0, 0, 0.5f, 0.08f), l);
+                float4 color = lerp(float4(1, 0, 0, 0), _Color, l);
 
                 GS_Input output =
                 {
@@ -119,10 +121,7 @@ Shader "Custom/GravitationalFieldPoints"
 
             float4 FS_Main(FS_Input input) : COLOR
             {
-                float4 color = tex2D(_MainTex, input.texcoord);
-                //color.a *= 0.5f;
-
-                return color * input.color;
+                return tex2D(_MainTex, input.texcoord) * input.color;
             };
 
             ENDCG

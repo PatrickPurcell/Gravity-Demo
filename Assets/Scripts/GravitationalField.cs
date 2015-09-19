@@ -142,31 +142,6 @@ namespace GravityDemo
         #endregion
 
         #region METHODS
-        private void ComputeVelocity()
-        {
-            if (Application.isPlaying)
-            {
-                if (bodies.Count > 0)
-                {
-                    gravitationalFieldVelocity.SetInt   (                       "w",            W);
-                    gravitationalFieldVelocity.SetInt   (                       "h",            H);
-                    gravitationalFieldVelocity.SetInt   (                       "d",            D);
-                    gravitationalFieldVelocity.SetInt   (                       "margin",       margin);
-                    gravitationalFieldVelocity.SetFloat (                       "delta_time",   Time.deltaTime);
-                    gravitationalFieldVelocity.SetBuffer(computeVelocityKernel, "point_buffer", pointBuffer);
-                    gravitationalFieldVelocity.SetBuffer(computeVelocityKernel, "body_buffer",  bodies.Buffer);
-                    gravitationalFieldVelocity.Dispatch(computeVelocityKernel, bodies.Count, 1, 1);
-                }
-            }
-        }
-
-        private void DrawField(Material material)
-        {
-            material.SetPass(0);
-            material.SetMatrix("object_to_world", transform.localToWorldMatrix);
-            Graphics.DrawProcedural(MeshTopology.Points, PointCount);
-        }
-
         private void ValidatePointBuffer()
         {
             if (ValidateComputeBuffer(PointCount, sizeof(float) * 3 * 2, ref pointBuffer))
@@ -191,6 +166,31 @@ namespace GravityDemo
 
                 gridMaterial.SetBuffer("point_buffer", pointBuffer);
                 gridMaterial.SetBuffer("grid_buffer",  gridBuffer);
+            }
+        }
+
+        private void DrawField(Material material)
+        {
+            material.SetPass(0);
+            material.SetMatrix("object_to_world", transform.localToWorldMatrix);
+            Graphics.DrawProcedural(MeshTopology.Points, PointCount);
+        }
+
+        private void ComputeVelocity()
+        {
+            if (Application.isPlaying)
+            {
+                if (bodies.Count > 0)
+                {
+                    gravitationalFieldVelocity.SetInt   (                       "w",            W);
+                    gravitationalFieldVelocity.SetInt   (                       "h",            H);
+                    gravitationalFieldVelocity.SetInt   (                       "d",            D);
+                    gravitationalFieldVelocity.SetInt   (                       "margin",       margin);
+                    gravitationalFieldVelocity.SetFloat (                       "delta_time",   Time.deltaTime);
+                    gravitationalFieldVelocity.SetBuffer(computeVelocityKernel, "point_buffer", pointBuffer);
+                    gravitationalFieldVelocity.SetBuffer(computeVelocityKernel, "body_buffer",  bodies.Buffer);
+                    gravitationalFieldVelocity.Dispatch(computeVelocityKernel, bodies.Count, 1, 1);
+                }
             }
         }
         #endregion

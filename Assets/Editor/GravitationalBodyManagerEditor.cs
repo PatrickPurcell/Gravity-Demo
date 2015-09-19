@@ -1,4 +1,6 @@
 ﻿
+#if UNITY_EDITOR
+
 namespace GravityDemo
 {
     using UnityEditor;
@@ -35,3 +37,5 @@ namespace GravityDemo
         #endregion
     }
 }
+
+#endif
