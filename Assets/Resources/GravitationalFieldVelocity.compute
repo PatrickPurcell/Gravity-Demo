@@ -81,7 +81,6 @@ void ComputeVelocity(uint id : SV_DispatchThreadID)
         0             1
     */
 
-
     uint3 index = uint3(position.x + (w - 1) * 0.5f,
                         position.y + (h - 1) * 0.5f,
                         position.z + (d - 1) * 0.5f);

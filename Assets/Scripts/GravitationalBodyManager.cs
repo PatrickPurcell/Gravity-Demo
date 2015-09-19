@@ -185,7 +185,13 @@ namespace GravityDemo
                 {
                     GravitationalBody body = bodies[i];
 
-                    data[i].position   = body.transform.position;
+                    Vector3 position = body.transform.position;
+                    if (position.x % 1 == 0 &&
+                        position.y % 1 == 0 &&
+                        position.z % 1 == 0)
+                        position[Random.Range(0, 3)] += 0.0001f;
+
+                    data[i].position   = position;
                     data[i].position.w = 1;
                     data[i].velocity   = body.transform.forward * body.InitialSpeed;
                     data[i].mass       = body.Mass;
