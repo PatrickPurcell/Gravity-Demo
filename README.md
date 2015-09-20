@@ -17,4 +17,4 @@ And many, MANY other caveats...
 
 ...like...really...MANY
 
-You'll need http://unity3d.com/ (5 or greater) and a DirectX11 capable GPU on a Windows system.
+You'll need [Unity3D](http://unity3d.com/) (5 or greater) and a DirectX11 capable GPU on a Windows system.
