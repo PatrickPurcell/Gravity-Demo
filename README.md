@@ -3,7 +3,10 @@
 
 ================================================================================================================================
 
-Compute shader based demo of pseudo-Einsteinian gravtiational curvature.
+Compute shader based demo of pseudo-Einsteinian gravitational curvature.
+
+[![Video Link](https://github.com/DynamicStatic/Gravity-Demo/blob/master/Assets/Resources/GravityScreen.PNG)]
+(https://www.youtube.com/watch?v=Hz42sDJE2e4 "VIDEO LINK")
 
 This demo is similar to other n-body gravity demos, except that none of the bodies communicate their gravitational force to each other, rather each body communicates its mass (they are point masses) and position to the gravitational field, the field then communicates its curvature to each body.
 
