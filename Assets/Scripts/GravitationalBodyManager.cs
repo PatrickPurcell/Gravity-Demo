@@ -113,7 +113,7 @@ namespace GravityDemo
                 float h = gravitationalField.Height * 0.5f;
                 float d = gravitationalField.Depth  * 0.5f;
                 float x = Random.Range(-w, w);
-                float z = Random.Range(-h, h);
+                float z = Random.Range(-d, d);
                 float r = Random.Range(0.0f, 1.0f);
                 float g = Random.Range(0.0f, 1.0f);
                 float b = Random.Range(0.0f, 1.0f);
